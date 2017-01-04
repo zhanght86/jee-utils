@@ -11,22 +11,25 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
-public class DateUtil extends DateUtils {
-	private static DateFormat timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
+	
+	public static final String TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSS";
+	public static final String DATETIME = "yyyy-MM-dd HH:mm:ss";
+	
 	private static DateFormat date = new SimpleDateFormat("yyyy-MM-dd");
 	private static DateFormat time = new SimpleDateFormat("HH:mm:ss");
-	private static DateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	public static String[] parsePatterns = { "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm", "yyyy-MM",
 			"yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/MM", "yyyy.MM.dd", "yyyy.MM.dd HH:mm:ss",
 			"yyyy.MM.dd HH:mm", "yyyy.MM" };
 
 	/**
 	 * 得到当前日期字符串 格式（yyyy-MM-dd）
+	 * 
+	 * @return String
 	 */
 	public static String getDate() {
-		return getDate("yyyy-MM-dd");
+		return getDate();
 	}
 
 	/**
@@ -53,7 +56,7 @@ public class DateUtil extends DateUtils {
 	 * 得到日期时间字符串，转换格式（yyyy-MM-dd HH:mm:ss）
 	 */
 	public static String formatDateTime(Date date) {
-		return formatDate(date, "yyyy-MM-dd HH:mm:ss");
+		return formatDate(date, DATETIME);
 	}
 
 	/**
@@ -172,7 +175,7 @@ public class DateUtil extends DateUtils {
     * @param @throws ParseException    
     * @return List<Map<String,String>>
      */
-	public static List<Map<String, String>> getPeriodTime(String fromTime, String endTime,int period) throws ParseException {
+	public static List<Map<String, String>> getPeriodTime(String fromTime, String endTime, int period) throws ParseException {
 		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date fromDate = sdf.parse(fromTime);
@@ -215,8 +218,29 @@ public class DateUtil extends DateUtils {
 		return new SimpleDateFormat(dateFormat).format(new Date());
 	}
 	
+	/**
+	 * 获取当前的时间 TimeStamp 格式
+	 * 
+	 * 格式：yyyy-MM-dd HH:mm:ss.SSS
+	 * 
+	 * @return String
+	 */
 	public static String getCurrentTimeStamp() {
-		return timeStamp.format(new Date());
+		DateFormat df = new SimpleDateFormat(TIMESTAMP);
+		return df.format(new Date());
+	}
+	
+	/**
+	 * 获取指定时间的 TimeStamp 格式
+	 * 
+	 * 格式：yyyy-MM-dd HH:mm:ss.SSS
+	 * 
+	 * @param value long 类型的时间
+	 * @return String
+	 */
+	public static String getTimeStamp(long value) {
+		DateFormat df = new SimpleDateFormat(TIMESTAMP);
+		return df.format(new Date(value));
 	}
 	
 	public static String getCurrentDate() {
@@ -228,11 +252,13 @@ public class DateUtil extends DateUtils {
 	}
 	
 	public static String getCurrentDateTime() {
-		return dateTime.format(new Date());
+		DateFormat df = new SimpleDateFormat(DATETIME);
+		return df.format(new Date());
 	}
 	
-	public static String getTimeStamp(long value) {
-		return timeStamp.format(new Date(value));
+	public static String getDateTime(long value) {
+		DateFormat df = new SimpleDateFormat(DATETIME);
+		return df.format(new Date(value));
 	}
 	
 	public static String getDate(long value) {
@@ -241,10 +267,6 @@ public class DateUtil extends DateUtils {
 	
 	public static String getTime(long value) {
 		return time.format(new Date(value));
-	}
-	
-	public static String getDateTime(long value) {
-		return dateTime.format(new Date(value));
 	}
 	
 	public static String getAssignDay(int offset) {
