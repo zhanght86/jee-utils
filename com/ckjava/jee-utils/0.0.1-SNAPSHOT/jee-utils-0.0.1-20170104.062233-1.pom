@@ -8,12 +8,19 @@
 	<packaging>jar</packaging>
 
 	<name>jee-utils</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/toulezu/jee-utils</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>1.8</jdk.version>
 		<github.global.server>github</github.global.server>
+		
+		<commons-lang-version>3.5</commons-lang-version>
+		<commons-collections-version>3.2.2</commons-collections-version>
+		<commons-dbutils-version>1.6</commons-dbutils-version>
+		<commons-io-version>2.5</commons-io-version>
+		<commons-beanutils-version>1.9.3</commons-beanutils-version>
+		<commons-fileupload-version>1.3.2</commons-fileupload-version>
 	</properties>
 
 	<distributionManagement>
@@ -25,6 +32,7 @@
 	</distributionManagement>
 
 	<dependencies>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -38,27 +46,59 @@
 			<version>1.6.1</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+		<!-- http://commons.apache.org/ -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
+			<version>${commons-lang-version}</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/commons-collections/commons-collections -->
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
+			<version>${commons-collections-version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.2</version>
+			<groupId>commons-dbutils</groupId>
+			<artifactId>commons-dbutils</artifactId>
+			<version>${commons-dbutils-version}</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.eclipse.mylyn.github/org.eclipse.egit.github.core -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${commons-io-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>${commons-beanutils-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>${commons-fileupload-version}</version>
+		</dependency>
+
+		<!-- http://commons.apache.org/ -->
+
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.22</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.22</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.eclipse.mylyn.github/org.eclipse.egit.github.core，下面的 
+			site-maven-plugin 依赖该版本 -->
 		<dependency>
 			<groupId>org.eclipse.mylyn.github</groupId>
 			<artifactId>org.eclipse.egit.github.core</artifactId>
@@ -70,8 +110,7 @@
 		<plugins>
 
 			<!-- https://github.github.com/maven-plugins/site-plugin/project.html -->
-			<!-- error:Error creating blob: Not Found (404) ->https://www.bountysource.com/issues/7809433-error-creating-blob-not-found-404 
-				For 'properties/author', nil is not an object. -->
+			<!-- error:Error creating blob: Not Found (404) ->https://www.bountysource.com/issues/7809433-error-creating-blob-not-found-404 -->
 			<plugin>
 				<groupId>com.github.github</groupId>
 				<artifactId>site-maven-plugin</artifactId>
