@@ -1,8 +1,6 @@
 package com.ckjava.utils;
 
-import org.apache.commons.lang3.StringUtils;
-
-public class StringUtil extends StringUtils {
+public class StringUtils extends org.apache.commons.lang3.StringUtils {
 	
 	public static String getUTF8Str(String ocharset, String str) throws Exception {
 		try {
@@ -26,32 +24,8 @@ public class StringUtil extends StringUtils {
 		}
 	}
 	
-	public static String getStr(Object object, String defaultString) {
-		return object != null ? (object.toString().equals("") ? defaultString : object.toString()) : defaultString;
-	}
-	
 	public static String getCleanStr(Object object) {
 		return object != null ? object.toString().replace("'", "‘").replace("\"", "”") : "";
-	}
-	
-	public static boolean isNotEmpty(String str) {
-		if (str != null && str.length() > 0) {
-			return true;
-		}
-		return false;
-	}
-	
-	public static boolean isEmpty(String str) {
-		return !isNotEmpty(str);
-	}
-	
-	/**
-	 * 将null的Object转成""
-	 * @param obj
-	 * @return Object
-	 */
-	public static Object getNotNullObject(Object obj) {
-		return obj == null ? "" : obj;
 	}
 	
 	/**
@@ -61,6 +35,10 @@ public class StringUtil extends StringUtils {
 	 */
 	public static String getStr(Object obj) {
 		return obj == null ? "" : obj.toString();
+	}
+	
+	public static String getStr(Object object, String defaultString) {
+		return object != null ? (object.toString().equals("") ? defaultString : object.toString()) : defaultString;
 	}
     
 	/**

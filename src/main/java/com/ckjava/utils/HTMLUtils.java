@@ -2,7 +2,7 @@ package com.ckjava.utils;
 
 public class HTMLUtils {
 	public static String htmlEscape(String htmlstr) {
-		if (StringUtil.isEmpty(htmlstr)) {
+		if (StringUtils.isEmpty(htmlstr)) {
 			return htmlstr;
 		}
 		htmlstr = htmlstr.replace("'", "&acute;");
@@ -14,7 +14,7 @@ public class HTMLUtils {
 	}
 	
 	public static String parseHtml(String str) {
-		if (StringUtil.isEmpty(str)) {
+		if (StringUtils.isEmpty(str)) {
 			return str;
 		}
 		str = str.replace("&acute;", "'");
