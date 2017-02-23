@@ -23,4 +23,12 @@ public class TestArrayUtils {
 		String[] arr = {"1"};
 		Assert.assertEquals(1, ArrayUtils.getSize(arr));
 	}
+	
+	@Test
+	public void TestJoin() {
+		Integer[] arr = {1, 2, 3, 4};
+		String str = ArrayUtils.join(arr, ",");
+		System.out.println(str);
+		Assert.assertEquals(str, "1,2,3,4");
+	}
 }

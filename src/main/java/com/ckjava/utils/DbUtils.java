@@ -13,9 +13,9 @@ import org.slf4j.LoggerFactory;
  * @author chen_k
  *
  */
-public class DBUtil {
+public class DbUtils {
 	
-	private static final Logger logger = LoggerFactory.getLogger(DBUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(DbUtils.class);
 
 	public static void executeMutiSql(Connection conn, String sql) {
 		int rowcount = 0;

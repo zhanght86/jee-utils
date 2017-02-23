@@ -1,6 +1,6 @@
 package com.ckjava.utils;
 
-public class ArrayUtils {
+public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 	
 	/**
 	 * 根据下标从数组中获取数据
@@ -38,5 +38,22 @@ public class ArrayUtils {
 	 */
 	public static <T> int getSize(T[] arr) {
 		return arr == null ? 0 : arr.length;
+	}
+	
+	/**
+	 * 将数组以分隔符 separator 为分界合并起来
+	 * @param arr 数组
+	 * @param separator 分隔符
+	 * @return 合并后的字符串
+	 */
+	public static <T> String join(T[] arr, String separator) {
+		if (arr == null || arr.length == 0) {
+			return null;
+		}
+		StringBuilder result = new StringBuilder();
+		for (T t : arr) {
+			result.append(t).append(separator);
+		}
+		return result.toString().substring(0, result.toString().lastIndexOf(separator));
 	}
 }
