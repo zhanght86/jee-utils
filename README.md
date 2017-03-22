@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/toulezu/jee-utils/badge.png?branch=master-github)](https://coveralls.io/github/toulezu/jee-utils?branch=master-github)
+
 # jee-utils
 - Java EE 开发中常用的工具类
 
