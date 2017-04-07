@@ -1,8 +1,10 @@
-package com.ckjava.utils;
+package com.ckjava.utils.test;
 
 import java.io.Serializable;
 
 import org.junit.Test;
+
+import com.ckjava.utils.ObjectUtils;
 
 public class TestObjectUtils {
 

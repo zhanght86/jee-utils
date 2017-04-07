@@ -1,5 +1,9 @@
 package com.ckjava.utils;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 	
 	/**
@@ -55,5 +59,43 @@ public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 			result.append(t).append(separator);
 		}
 		return result.toString().substring(0, result.toString().lastIndexOf(separator));
+	}
+	
+	/**
+	 * 将多个数组合并成一个后返回
+	 * 
+	 * {
+	 * String[] str1 = {"1", "2"};
+	 * String[] str2 = {"3", "4"};
+	 * 
+	 * String[] str3 = merge(str1, str2);
+	 * 
+	 * str3 = {"1", "2", "3", "4"}
+	 * return str3
+	 * }
+	 * 
+	 * @param T[]...arrs 
+	 * @return T[]
+	 */
+	@SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static <T> T[] merge(T[]...arrs) {
+		int size = getSize(arrs);
+		if (size == 0) {
+			return null;
+		}
+		if (size == 1) {
+			return arrs[0];
+		}
+		
+        List<T> tempList = new ArrayList<>();
+		for (int i = 0; i < size; i++) {
+			T[] t = getValue(arrs, i);
+			for (int j = 0, c = getSize(t); j < c; j++) {
+				tempList.add(getValue(t, j));
+			}
+		}
+		T[] array = (T[]) Array.newInstance(arrs[0].getClass().getComponentType(), tempList.size()); 
+		return tempList.toArray(array);
 	}
 }

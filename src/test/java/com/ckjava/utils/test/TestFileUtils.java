@@ -1,4 +1,4 @@
-package com.ckjava.utils;
+package com.ckjava.utils.test;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
