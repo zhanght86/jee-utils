@@ -1,5 +1,5 @@
-[![Coverage Status](https://coveralls.io/repos/github/toulezu/jee-utils/badge.png?branch=master-github)](https://coveralls.io/github/toulezu/jee-utils?branch=master-github)
 [![Build Status](https://travis-ci.org/toulezu/jee-utils.svg?branch=master)](https://travis-ci.org/toulezu/jee-utils)
+
 
 # jee-utils
 - Java EE 开发中常用的工具类
