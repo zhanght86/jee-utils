@@ -8,6 +8,7 @@
 
 - 在需要依赖此项目的 pom.xml 中添加如下配置后，再添加相应的依赖关系即可
 ```xml
+<!-- github 仓库地址 -->
 <repositories>
 	<repository>
 	   	<id>jee-utils-mvn-repo</id>
@@ -15,6 +16,7 @@
 	</repository>
 </repositories>
 
+<!-- maven依赖 -->
 <dependencies>
 	<dependency>
 		<groupId>com.ckjava</groupId>
