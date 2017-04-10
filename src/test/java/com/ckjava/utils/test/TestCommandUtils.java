@@ -1,9 +1,5 @@
 package com.ckjava.utils.test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Test;
 
 import com.ckjava.utils.CommandUtils;
@@ -12,10 +8,28 @@ public class TestCommandUtils {
 
 	@Test
 	public void execTask() {
-		Map<String, String> data = Collections.synchronizedMap(new HashMap<String, String>());
-		data.put(CommandUtils.COMMAND_FLAG, "ipconfig");
-		CommandUtils.execTask(data);
-		System.out.println("result:" + data.get(CommandUtils.RESULT_TYPE_RESULT));
-		System.out.println("error:"+data.get(CommandUtils.RESULT_TYPE_ERROR));
+		final StringBuffer output = new StringBuffer();
+		
+		Thread task = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				CommandUtils.execTask("ping www.baidu.com", output);		
+			}
+		});
+		task.start();
+		while (true) {
+			if (!task.isAlive()) {
+				System.out.println(output.toString());
+				break;
+			} else {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.out.println("running");
+			}
+		}
+		
 	}
 }
