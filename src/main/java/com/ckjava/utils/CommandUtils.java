@@ -124,7 +124,7 @@ public class CommandUtils {
 	    	BufferedReader inReader = null;
 	    	String tempStr = null;
 	        try {
-	            isr = new InputStreamReader(is);
+	            isr = new InputStreamReader(is, CharsetUtils.ENCODE_UTF_8);
 	            inReader = new BufferedReader(isr);
 			    while ((tempStr = inReader.readLine()) != null) {
 			        runResult.append(tempStr).append("\n");
