@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class CommandUtils {
 	
+	public static final String COMMAND_FLAG = "command";
 	public static final String RESULT_TYPE_RESULT = "result";
 	public static final String RESULT_TYPE_ERROR = "error";
 	
@@ -54,11 +55,17 @@ public class CommandUtils {
 	/**
 	 * 执行命令
 	 * 
-	 * @param data Map<String, String> : key = command 执行的命令,result 命令的执行结果, error 命令执行出错内容
-	 * @return
+	 * @param data 
+	 * 
+	 * Map<String, String>
+	 *
+	 * key = 执行的命令
+	 * result =  命令的执行结果 
+	 * error = 命令执行出错内容
+	 * 
 	 */
 	public static void execTask(Map<String, String> data) {
-		String command = data.get("command");
+		String command = data.get(COMMAND_FLAG);
 		logger.info(" thread name = {}, start execute command = {} ", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
