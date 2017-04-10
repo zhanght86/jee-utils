@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/toulezu/jee-utils.svg?branch=master)](https://travis-ci.org/toulezu/jee-utils)
+[![Build Status](https://travis-ci.org/toulezu/jee-utils.svg?branch=master-github)](https://travis-ci.org/toulezu/jee-utils)
 
 
 # jee-utils
