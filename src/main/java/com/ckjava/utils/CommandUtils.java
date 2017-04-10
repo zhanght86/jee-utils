@@ -18,7 +18,7 @@ public class CommandUtils {
 	public static final String RESULT_TYPE_RESULT = "result";
 	public static final String RESULT_TYPE_ERROR = "error";
 	
-	private static Logger logger = LoggerFactory.getLogger(FileUtils.class);
+	private static Logger logger = LoggerFactory.getLogger(CommandUtils.class);
 	
 	public static InputStream exec(String command) throws IOException {
 		return exec(command , null , null);
@@ -124,7 +124,7 @@ public class CommandUtils {
 	    	BufferedReader inReader = null;
 	    	String tempStr = null;
 	        try {
-	            isr = new InputStreamReader(is, CharsetUtils.ENCODE_UTF_8);
+	            isr = new InputStreamReader(is);
 	            inReader = new BufferedReader(isr);
 			    while ((tempStr = inReader.readLine()) != null) {
 			        runResult.append(tempStr).append("\n");
