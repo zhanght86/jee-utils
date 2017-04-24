@@ -11,12 +11,19 @@ import java.io.FileWriter;
 import java.io.InputStream;
 
 import org.apache.commons.codec.binary.Base64;
+import org.junit.Test;
 
 public class TestFileUtils {
 	public static void main(String[] args) {
 		enCodeFile();
 		
 		deCodeFile();
+	}
+	
+	@Test
+	public void testzipFiles() {
+		//FileUtils.zipFiles("D:/svn-workspace/", "*", "D:/svn-workspace/svn-workspace.zip");
+		//System.out.println("finish");
 	}
 
 	private static void deCodeFile() {
