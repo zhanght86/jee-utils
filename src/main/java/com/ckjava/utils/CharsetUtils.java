@@ -4,24 +4,29 @@ import java.nio.charset.UnsupportedCharsetException;
 
 public class CharsetUtils {
 	
+	public static final String ENCODE_UTF_8 = "UTF-8";
+	public static final String ENCODE_GB2312 = "GB2312";
+	public static final String ENCODE_ISO_8859_1 = "ISO-8859-1";
+	public static final String ENCODE_GBK = "GBK";
+	
 	public static String getEncoding(String str) throws Exception {
 		if (str == null) {
 			throw new IllegalArgumentException("judge string encoding, the parameter is null");
 		}
 		try {
-	        String encode = "GB2312";
+	        String encode = ENCODE_GB2312;
 	        if (str.equals(new String(str.getBytes(encode), encode))) {   
 	           return encode;   
 	        }
-	        encode = "ISO-8859-1";   
+	        encode = ENCODE_ISO_8859_1;   
 	        if (str.equals(new String(str.getBytes(encode), encode))) {   
 	           return encode;   
 	        }
-	        encode = "UTF-8";   
+	        encode = ENCODE_UTF_8;   
 	        if (str.equals(new String(str.getBytes(encode), encode))) {   
 	           return encode;   
 	        }
-	        encode = "GBK";   
+	        encode = ENCODE_GBK;   
 	        if (str.equals(new String(str.getBytes(encode), encode))) {   
 	           return encode;   
 	        }
