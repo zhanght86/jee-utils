@@ -1,6 +1,5 @@
 package com.ckjava.utils;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,95 +9,80 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+/**
+ * 将 java.util.Date 类型转成 String 类型，或者将 String 类型转成 java.util.Date 类型
+ * @author ck
+ *
+ */
 public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 	
 	public static final String TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSS";
 	public static final String DATETIME = "yyyy-MM-dd HH:mm:ss";
+	public static final String DATE = "yyyy-MM-dd";
+	public static final String TIME = "HH:mm:ss";
+	public static final String YEAR = "yyyy";
+	public static final String MONTH = "MM";
+	public static final String DAY = "dd";
+	public static final String WEEKDAY = "E";
 	
-	private static DateFormat date = new SimpleDateFormat("yyyy-MM-dd");
-	private static DateFormat time = new SimpleDateFormat("HH:mm:ss");
-	public static String[] parsePatterns = { "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm", "yyyy-MM",
+	public static final String[] PATTERNS = { "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm", "yyyy-MM",
 			"yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/MM", "yyyy.MM.dd", "yyyy.MM.dd HH:mm:ss",
 			"yyyy.MM.dd HH:mm", "yyyy.MM" };
 
-	/**
-	 * 得到当前日期字符串 格式（yyyy-MM-dd）
-	 * 
-	 * @return String
-	 */
-	public static String getDate() {
-		return getDate();
-	}
 
 	/**
-	 * 得到当前日期字符串 格式（yyyy-MM-dd） pattern可以为："yyyy-MM-dd" "HH:mm:ss" "E"
+	 * 获取指定时间的字符串格式
+	 * 
+	 * @param date Date
+	 * @param pattern @see DateUtils.TIMESTAMP, DateUtils.DATETIME, DateUtils.DATE, DateUtils.TIME
+	 * @see DateFormatUtils
+	 * @return String
 	 */
-	public static String getDate(String pattern) {
-		return DateFormatUtils.format(new Date(), pattern);
+	public static String getDateString(Date date, String pattern) {
+		return DateFormatUtils.format(date, pattern);
 	}
 
 	/**
 	 * 得到日期字符串 默认格式（yyyy-MM-dd） pattern可以为："yyyy-MM-dd" "HH:mm:ss" "E"
 	 */
-	public static String formatDate(Date date, Object... pattern) {
-		String formatDate = null;
-		if (pattern != null && pattern.length > 0) {
-			formatDate = DateFormatUtils.format(date, pattern[0].toString());
+	public static String getDateString(Date date, Object... pattern) {
+		if (ArrayUtils.isNotEmpty(pattern)) {
+			return DateFormatUtils.format(date, pattern[0].toString());
 		} else {
-			formatDate = DateFormatUtils.format(date, "yyyy-MM-dd");
+			return DateFormatUtils.format(date, "yyyy-MM-dd");
 		}
-		return formatDate;
 	}
 
-	/**
-	 * 得到日期时间字符串，转换格式（yyyy-MM-dd HH:mm:ss）
-	 */
-	public static String formatDateTime(Date date) {
-		return formatDate(date, DATETIME);
-	}
-
-	/**
-	 * 得到当前时间字符串 格式（HH:mm:ss）
-	 */
-	public static String getTime() {
-		return formatDate(new Date(), "HH:mm:ss");
-	}
-
-	/**
-	 * 得到当前日期和时间字符串 格式（yyyy-MM-dd HH:mm:ss）
-	 */
-	public static String getDateTime() {
-		return formatDate(new Date(), "yyyy-MM-dd HH:mm:ss");
-	}
 
 	/**
 	 * 得到当前年份字符串 格式（yyyy）
 	 */
-	public static String getYear() {
-		return formatDate(new Date(), "yyyy");
+	public static String getYear(Date date) {
+		return getDateString(date, YEAR);
 	}
 
 	/**
 	 * 得到当前月份字符串 格式（MM）
 	 */
-	public static String getMonth() {
-		return formatDate(new Date(), "MM");
+	public static String getMonth(Date date) {
+		return getDateString(date, MONTH);
 	}
 
 	/**
 	 * 得到当天字符串 格式（dd）
 	 */
-	public static String getDay() {
-		return formatDate(new Date(), "dd");
+	public static String getDay(Date date) {
+		return getDateString(date, DAY);
 	}
 
 	/**
 	 * 得到当前星期字符串 格式（E）星期几
 	 */
-	public static String getWeek() {
-		return formatDate(new Date(), "E");
+	public static String getWeek(Date date) {
+		return getDateString(date, WEEKDAY);
 	}
 
 	/**
@@ -111,7 +95,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 			return null;
 		}
 		try {
-			return parseDate(str.toString(), parsePatterns);
+			return parseDate(str.toString(), PATTERNS);
 		} catch (ParseException e) {
 			return null;
 		}
@@ -177,9 +161,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
      */
 	public static List<Map<String, String>> getPeriodTime(String fromTime, String endTime, int period) throws ParseException {
 		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date fromDate = sdf.parse(fromTime);
 		Date endDate = sdf.parse(endTime);
+		
 		Date covDate = fromDate;
 		while (covDate.getTime() < endDate.getTime()) {
 			Calendar rightNow = Calendar.getInstance();
@@ -187,8 +173,8 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 			rightNow.add(Calendar.MINUTE, period);// 加30分钟
 			covDate = rightNow.getTime();
 			Map<String,String> map = new HashMap<String, String>();
-			map.put("fromTime", formatDateTime(fromDate));
-			map.put("endTime", formatDateTime(covDate));
+			map.put("fromTime", getDateString(fromDate, DATETIME));
+			map.put("endTime", getDateString(covDate, DATETIME));
 			list.add(map);
 			fromDate = covDate;
 		}
@@ -207,86 +193,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 		long afterTime = after.getTime();
 		return (afterTime - beforeTime) / (1000 * 60 * 60 * 24);
 	}
-
-	
-	/**
-	 * 获取指定类型的时间格式
-	 * @param dateFormat
-	 * @return
-	 */
-	public static String getDateString(String dateFormat) {
-		return new SimpleDateFormat(dateFormat).format(new Date());
-	}
-	
-	/**
-	 * 获取当前的时间 TimeStamp 格式
-	 * 
-	 * 格式：yyyy-MM-dd HH:mm:ss.SSS
-	 * 
-	 * @return String
-	 */
-	public static String getCurrentTimeStamp() {
-		DateFormat df = new SimpleDateFormat(TIMESTAMP);
-		return df.format(new Date());
-	}
-	
-	/**
-	 * 获取指定时间的 TimeStamp 格式
-	 * 
-	 * 格式：yyyy-MM-dd HH:mm:ss.SSS
-	 * 
-	 * @param value long 类型的时间
-	 * @return String
-	 */
-	public static String getTimeStamp(long value) {
-		DateFormat df = new SimpleDateFormat(TIMESTAMP);
-		return df.format(new Date(value));
-	}
-	
-	public static String getCurrentDate() {
-		return date.format(new Date());
-	}
-	
-	public static String getCurrentTime() {
-		return time.format(new Date());
-	}
-	
-	public static String getCurrentDateTime() {
-		DateFormat df = new SimpleDateFormat(DATETIME);
-		return df.format(new Date());
-	}
-	
-	public static String getDateTime(long value) {
-		DateFormat df = new SimpleDateFormat(DATETIME);
-		return df.format(new Date(value));
-	}
-	
-	public static String getDate(long value) {
-		return date.format(new Date(value));
-	}
-	
-	public static String getTime(long value) {
-		return time.format(new Date(value));
-	}
 	
 	public static String getAssignDay(int offset) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.DAY_OF_MONTH, offset);
-		return date.format(calendar.getTime());
+		return DateFormatUtils.format(calendar.getTime(), DateUtils.DATE);
 	}
 	
-	public static void main(String[] args) {
-/*		System.out.println(getCurrentDate());
-		System.out.println(getCurrentTime());
-		System.out.println(getCurrentDateTime());
-		System.out.println(getCurrentTimeStamp());
-		System.out.println("--------------------------------");
-		long value = new Date().getTime();
-		System.out.println(getTimeStamp(value));
-		System.out.println(getTime(value));
-		System.out.println(getDate(value));
-		System.out.println(getDateTime(value));*/
-		
-		System.out.println(getAssignDay(0));
-	}
 }
