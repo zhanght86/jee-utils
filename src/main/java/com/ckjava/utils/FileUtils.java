@@ -295,8 +295,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 			}
 			// 删除子目录
 			else if (files[i].isDirectory()) {
-				flag = FileUtils.deleteDirectory(files[i]
-						.getAbsolutePath());
+				flag = FileUtils.deleteDirectory(files[i].getAbsolutePath());
 				// 如果删除子目录失败，则退出循环
 				if (!flag) {
 					break;
@@ -415,10 +414,11 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 	 * 压缩文件或目录
 	 * @param srcDirName 压缩的根目录
 	 * @param fileName 根目录下的待压缩的文件名或文件夹名，其中*或""表示跟目录下的全部文件
+	 * @param excludePath String[] 排除的文件路径
+	 * @param excludeFile String[] 排除的文件名称
 	 * @param descFileName 目标zip文件
 	 */
-	public static void zipFiles(String srcDirName, String fileName,
-			String descFileName) {
+	public static void zipFiles(String srcDirName, String fileName, String[] excludePath, String[] excludeFile, String descFileName) {
 		// 判断目录是否存在
 		if (srcDirName == null) {
 			logger.debug("文件压缩失败，目录 " + srcDirName + " 不存在!");
@@ -432,17 +432,15 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 		String dirPath = fileDir.getAbsolutePath();
 		File descFile = new File(descFileName);
 		try {
-			ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(
-					descFile));
+			ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(descFile));
 			if ("*".equals(fileName) || "".equals(fileName)) {
-				FileUtils.zipDirectoryToZipFile(dirPath, fileDir, zouts);
+				FileUtils.zipDirectoryToZipFile(dirPath, fileDir, excludePath, excludeFile, zouts);
 			} else {
 				File file = new File(fileDir, fileName);
 				if (file.isFile()) {
 					FileUtils.zipFilesToZipFile(dirPath, file, zouts);
 				} else {
-					FileUtils
-							.zipDirectoryToZipFile(dirPath, file, zouts);
+					FileUtils.zipDirectoryToZipFile(dirPath, file, excludePath, excludeFile, zouts);
 				}
 			}
 			zouts.close();
@@ -451,16 +449,31 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 			logger.debug("文件压缩失败：" + e.getMessage());
 			e.printStackTrace();
 		}
-
+	}
+	
+	public static void zipFile(File file) {
+		if (file.exists()) {
+			String filePath = file.getParent();
+			try {
+				ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(filePath+File.separator+file.getName()+"_zip.zip"));
+				zipFilesToZipFile(filePath, file, zouts);
+				zouts.close();
+			} catch (Exception e) {
+				logger.debug("文件压缩失败：" + e.getMessage());
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
 	 * 将目录压缩到ZIP输出流
 	 * @param dirPath 目录路径
 	 * @param fileDir 文件信息
+	 * @param excludePath String[] 排除的文件路径
+	 * @param excludeFile String[] 排除的文件名称
 	 * @param zouts 输出流
 	 */
-	public static void zipDirectoryToZipFile(String dirPath, File fileDir, ZipOutputStream zouts) {
+	public static void zipDirectoryToZipFile(String dirPath, File fileDir, String[] excludePath, String[] excludeFile, ZipOutputStream zouts) {
 		if (fileDir.isDirectory()) {
 			File[] files = fileDir.listFiles();
 			// 空的文件夹
@@ -477,14 +490,19 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 			}
 
 			for (int i = 0; i < files.length; i++) {
-				if (files[i].isFile()) {
+				File tempFile = files[i]; 
+				if (tempFile.isFile()) {
+					if (ArrayUtils.contains(excludeFile, tempFile.getName())) {
+						continue;
+					}
 					// 如果是文件，则调用文件压缩方法
-					FileUtils
-							.zipFilesToZipFile(dirPath, files[i], zouts);
+					FileUtils.zipFilesToZipFile(dirPath, files[i], zouts);
 				} else {
+					if (ArrayUtils.contains(excludePath, tempFile.getName())) {
+						continue;
+					}
 					// 如果是目录，则递归调用
-					FileUtils.zipDirectoryToZipFile(dirPath, files[i],
-							zouts);
+					FileUtils.zipDirectoryToZipFile(dirPath, files[i], excludePath, excludeFile, zouts);
 				}
 			}
 		}
@@ -516,8 +534,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 				}
 				zouts.closeEntry();
 				fin.close();
-				System.out
-						.println("添加文件 " + file.getAbsolutePath() + " 到zip文件中!");
+				System.out.println("添加文件 " + file.getAbsolutePath() + " 到zip文件中!");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

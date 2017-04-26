@@ -3,14 +3,12 @@ package com.ckjava.utils;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -112,9 +110,9 @@ public class CommandUtils {
 			proc = run.exec(command);// 启动另一个进程来执行命令
 			StringBuffer data = new StringBuffer();
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), "", socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getErrorStream(), socketOutput, data));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), "", socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getInputStream(), socketOutput, data));
 			// 接收socket输入
 			// executorService.submit(new RobotThread(socketInput));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
@@ -149,14 +147,11 @@ public class CommandUtils {
 			proc = run.exec(command);// 启动另一个进程来执行命令
 			StringBuffer data = new StringBuffer();
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), startRobotSign, socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getErrorStream(), socketOutput, data));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), startRobotSign, socketOutput, data));
-			
+			executorService.submit(new WriteToStream(proc.getInputStream(), socketOutput, data));
+			// 启动机器人线程
 			executorService.submit(new RobotThread(startRobotSign));
-			
-			// 接收socket输入
-			// executorService.submit(new RobotThread(socketInput));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
 		    	writeString("执行命令没有正常终止", socketOutput);
@@ -190,13 +185,14 @@ public class CommandUtils {
 		@Override
 		public void run() {
 			long current = System.currentTimeMillis();
-			boolean isrun = true;
-			while (isrun) {
+			while (true) {
 				long now = System.currentTimeMillis();
 	    		if (now - current >= 1000) { // 每秒检查一次
+	    			current = now;
+	    			logger.info("robot wait to start");
 	    			File file = new File(startRobotSign);
-	    			System.out.println("client:" + file.getAbsolutePath());
 	    			if (file.exists()) {
+	    				logger.info("start robot");
 	    				try {
 				    		Robot robot = new Robot();
 				    		robot.keyPress(KeyEvent.VK_Q);
@@ -205,12 +201,12 @@ public class CommandUtils {
 				    		robot.keyRelease(KeyEvent.VK_ENTER);
 				    		file.delete();
 				    		logger.info("robot send Q success");
-				    		isrun = false;
+				    		break;
 						} catch (Exception e) {
 							logger.error("robot send Q has error", e);
+							break;
 						}
 	    			}
-	    			current = now;
 	    		}
 			}
 		}
@@ -252,18 +248,15 @@ public class CommandUtils {
 	    private InputStream input; // Process 输入流
 	    private OutputStream socketOutput; // socket 输出到外部,不要关闭
 	    private StringBuffer data;
-	    private String startRobotSign;
 	    
-	    private WriteToStream(InputStream input, String startRobotSign, OutputStream socketOutput, StringBuffer data) {
+	    private WriteToStream(InputStream input, OutputStream socketOutput, StringBuffer data) {
 	        this.input = input;
 	        this.socketOutput = socketOutput;
 	        this.data = data;
-	        this.startRobotSign = startRobotSign;
 	    }
 	    
 	    public void run() {
 	    	BufferedReader inReader = null;
-	    	
 	    	DataOutputStream socketDos = null;
 	        try {
 	            inReader = new BufferedReader(new InputStreamReader(input));
@@ -271,28 +264,9 @@ public class CommandUtils {
 	            
 	            String tempStr = null;
 			    while ((tempStr = inReader.readLine()) != null) {
-			    	logger.debug("process output:"+tempStr);
-
-			    	if (tempStr.contains("Successfully opened log file")) {
-			    		logger.info("find Successfully opened log file");
-
-			    		// 按Q退出进程
-			    		/*try {
-				    		Robot robot = new Robot();
-				    		robot.keyPress(KeyEvent.VK_Q);
-				    		robot.keyRelease(KeyEvent.VK_Q);
-				    		robot.keyPress(KeyEvent.VK_ENTER);
-				    		robot.keyRelease(KeyEvent.VK_ENTER);
-				    		logger.info("robot send q success");
-						} catch (Exception e) {
-							logger.error("robot send q has error", e);
-						}*/
-			    	}
-			    	
 			    	data.append(tempStr);
 			    	socketDos.writeUTF(tempStr);
 			    }
-			    
 			    socketDos.flush();
 	        } catch (IOException ioe) {
 	        	logger.error("read Process InputStream has error");

@@ -13,7 +13,7 @@ public class TestCommandUtils {
 		Thread task = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				CommandUtils.execTask("ping www.baidu.com", output);		
+				CommandUtils.execTask("ping www.baidu.com", output);
 			}
 		});
 		task.start();
