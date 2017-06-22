@@ -17,6 +17,16 @@ import com.ckjava.utils.IOUtils;
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
 		
+		String originalBody = null;
+		try {
+			originalBody = IOUtils.getString(TestHttpClientUtils.class.getResourceAsStream("/body.txt")); // 从classpath下获取文件
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println(originalBody);
+	}
+
+	public static void testPostApi() {
 		String url = "http://ws.ebank.payment.fat18.qa.nt.ctripcorp.com/PaymentPasswordServiceAPI/GetUserPWDInfo";
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json;charset=utf-8");

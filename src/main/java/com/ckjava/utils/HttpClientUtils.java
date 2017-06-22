@@ -44,9 +44,9 @@ public class HttpClientUtils {
 	/**
 	 * post 请求, body 是 json
 	 * 
-	 * @param url url
-	 * @param obj body
-	 * @return
+	 * @param url url String
+	 * @param obj body Object 请求体
+	 * @return String
 	 */
 	public static String post(String url, Object obj) {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -62,6 +62,14 @@ public class HttpClientUtils {
 		return body;
 	}
 	
+	/**
+	 * post 请求, body 是 json
+	 * @param url String
+	 * @param headers Map<String, String> 请求头
+	 * @param parameters Map<String, String> 请求参数
+	 * @param obj Object 请求体 
+	 * @return String
+	 */
 	public static String post(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		String body = null;
@@ -76,18 +84,26 @@ public class HttpClientUtils {
 		return body;
 	}
 
+	/**
+	 * get 请求
+	 * @param url url
+	 * @param params Map<String, String> 请求参数
+	 * @return String
+	 */
 	public static String get(String url, Map<String, String> params) {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		String body = null;
 		
-		boolean flag = true;
-		for (Iterator<Entry<String, String>> it = params.entrySet().iterator(); it.hasNext();) {
-			Entry<String, String> entry = it.next();
-			if (flag) {
-				url += "?";
-				flag = false;
-			}
-			url += "&" + entry.getKey() + "=" + entry.getValue();
+		if (params != null && !params.isEmpty()) {
+			boolean flag = true;
+			for (Iterator<Entry<String, String>> it = params.entrySet().iterator(); it.hasNext();) {
+				Entry<String, String> entry = it.next();
+				if (flag) {
+					url += "?";
+					flag = false;
+				}
+				url += "&" + entry.getKey() + "=" + entry.getValue();
+			}	
 		}
 
 		log.info("create httpget:" + url);
