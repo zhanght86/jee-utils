@@ -16,6 +16,10 @@ import com.ckjava.utils.IOUtils;
 
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
+		//testPostApi();
+	}
+
+	public static void testGetApi() {
 		String datas = HttpClientUtils.get("https://ws.proxy.router.payment.fat45.qa.nt.ctripcorp.com/payment-route-apiservice/cache/value/get?key=payment:merchant:product:new:indexfat45&type=2", null);
 		System.out.println(datas);
 	}

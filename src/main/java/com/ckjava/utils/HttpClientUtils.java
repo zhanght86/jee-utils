@@ -2,30 +2,51 @@ package com.ckjava.utils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 
+@SuppressWarnings("deprecation")
 public class HttpClientUtils {
 	private static Logger log = LoggerFactory.getLogger(HttpClientUtils.class);
 	
+	private static int timeout = 100000;
+	
 	public static String put(String url, Map<String, String> params) {
-		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
 			log.info("create http put:" + url);
 			HttpPut put = putForm(url, params);
@@ -50,7 +71,7 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String post(String url, Object obj) {
-		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
 			log.info("create http post:" + url);
 			HttpPost post = postJSONForm(url, null, null, obj);
@@ -76,7 +97,7 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String post(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
-		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
 			log.info("create http post:" + url);
 			HttpPost post = postJSONForm(url, headers, parameters, obj);
@@ -101,7 +122,7 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String get(String url, Map<String, String> params) {
-		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
 			// 将请求参数追加到url后面
 			appendRequestParameter(url, params);
@@ -153,7 +174,7 @@ public class HttpClientUtils {
 		}
 	}
 
-	private static HttpResponse sendRequest(CloseableHttpClient httpclient, HttpUriRequest request) {
+	private static HttpResponse sendRequest(HttpClient httpclient, HttpUriRequest request) {
 		log.info("execute request...");
 		HttpResponse response = null;
 
@@ -214,6 +235,55 @@ public class HttpClientUtils {
 		}
 
 		return httput;
+	}
+	
+	private static CloseableHttpClient initWeakSSLClient() {
+		HttpClientBuilder b = HttpClientBuilder.create();
+
+	    // setup a Trust Strategy that allows all certificates.
+	    //
+	    SSLContext sslContext = null;
+	    try {
+	        sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+	            public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+	                return true;
+	            }
+	        }).build();
+	    } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+	        // do nothing, has been handled outside
+	    }
+	    b.setSSLContext(sslContext);
+
+	    // don't check Hostnames, either.
+	    //      -- use SSLConnectionSocketFactory.getDefaultHostnameVerifier(), if you don't want to weaken
+	    X509HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+
+	    // here's the special part:
+	    //      -- need to create an SSL Socket Factory, to use our weakened "trust strategy";
+	    //      -- and create a Registry, to register it.
+	    //
+	    SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
+	    Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+	            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+	            .register("https", sslSocketFactory)
+	            .build();
+
+	    // now, we create connection-manager using our Registry.
+	    //      -- allows multi-threaded use
+	    PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+	    b.setConnectionManager(connMgr);
+
+	    /**
+	     * Set timeout option
+	     */
+	    RequestConfig.Builder configBuilder = RequestConfig.custom();
+        configBuilder.setConnectTimeout(timeout);
+        configBuilder.setSocketTimeout(timeout);
+	    b.setDefaultRequestConfig(configBuilder.build());
+
+	    // finally, build the HttpClient;
+	    //      -- done!
+	    return b.build();
 	}
 	
 	public static void main(String[] args) {}
