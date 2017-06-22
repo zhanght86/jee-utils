@@ -1,0 +1,81 @@
+[moduleid]41041600[title]TraceAtManagedService[message][trace]<?xml version="1.0"?>
+<Request>
+  <Header UserID="411003" RequestID="c6f54f00-1f54-4fa8-aeff-871706f320a8" RequestType="Payment.Base.ManagedService.CreatePaymentBill" ClientIP="10.15.214.13" AsyncRequest="false" Timeout="0" MessagePriority="3" AssemblyVersion="2.8.0.0" RequestBodySize="0" SerializeMode="Xml" RouteStep="1" Environment="pro" UseMemoryQ="false" />
+  <CreatePaymentBillRequest>
+    <ExternalNo />
+    <OutBillNo>3817061511000145435</OutBillNo>
+    <MerchantID>200033</MerchantID>
+    <Currency>CNY</Currency>
+    <ExchangeRate>1</ExchangeRate>
+    <TotalAmount>460</TotalAmount>
+    <OrderID>3925264375</OrderID>
+    <OrderType>16</OrderType>
+    <OrderTitle>攀枝花-成都</OrderTitle>
+    <IsNeedFrozen>false</IsNeedFrozen>
+    <IsNeedDeduct>false</IsNeedDeduct>
+    <PaymentUid>_CFT02226447204</PaymentUid>
+    <Proposer>无线支付</Proposer>
+    <GatheringType>D</GatheringType>
+    <PathType>P</PathType>
+    <Managed>T</Managed>
+    <RecallType>SOA20:http://ws.order.train.sh.ctriptravel.com/train-vendor-orderprocess/api/json/Payment2ReCall</RecallType>
+    <IFValid>T</IFValid>
+    <PayDeadLine>2099-12-31T00:00:00</PayDeadLine>
+    <PaymentMethodItems>
+      <PaymentMethodItem>
+        <BillItemNo>0</BillItemNo>
+        <PaymentWayID>EB_MobileAlipay</PaymentWayID>
+        <PayInfoExtend />
+        <Amount>460</Amount>
+        <RealAmount>460</RealAmount>
+        <RMBRealAmount>460</RMBRealAmount>
+        <ExchangeRate>1</ExchangeRate>
+        <Currency>CNY</Currency>
+        <IFValid>T</IFValid>
+        <WillCancel>F</WillCancel>
+        <RefundEMoneyDetails />
+        <DisplayAmount>0</DisplayAmount>
+        <BussinessExchangeRate>1</BussinessExchangeRate>
+        <BussinessCurrency>CNY</BussinessCurrency>
+        <ChannelId>109</ChannelId>
+        <BrandId>EB_MobileAlipay</BrandId>
+      </PaymentMethodItem>
+    </PaymentMethodItems>
+    <ExternalDealID>0</ExternalDealID>
+    <DisplayAmount>0</DisplayAmount>
+    <IgnoreIsNewOutBillNo>false</IgnoreIsNewOutBillNo>
+    <IsNeedCardRisk>true</IsNeedCardRisk>
+    <ExtendRemark>Ip=112.19.184.167,ProductType=AirTravel,ClientType=NA,IsRealName=1,BusinessType=Virtual</ExtendRemark>
+    <AllowOldOutBillNo>false</AllowOldOutBillNo>
+    <NeedRealTimeApply>T</NeedRealTimeApply>
+    <CardRiskExtendInfo>{"PayMethod":null,"DeductType":1,"PayValidationMethod":"","BankValidationMethod":null,"ValidationFailsReason":null,"ClientOS":"APP-android-704","ClientIDOrIP":"32001083310045837459","RmsToken":""}</CardRiskExtendInfo>
+    <Terminal>APP</Terminal>
+    <SeqId>3517061511000074291</SeqId>
+  </CreatePaymentBillRequest>
+</Request><?xml version="1.0"?>
+<Response>
+  <Header ShouldRecordPerformanceTime="false" UserID="411003" RequestID="c6f54f00-1f54-4fa8-aeff-871706f320a8" ResultCode="Success" ResultNo="0" ResultMsg="" AssemblyVersion="2.8.0.0" RequestBodySize="0" SerializeMode="Xml" RouteStep="1" Environment="pro" />
+  <PaymentBillResponse>
+    <IsSuccess>true</IsSuccess>
+    <Message />
+    <RetCode>0</RetCode>
+    <BillList>
+      <Bill>
+        <BillNo>1058874609</BillNo>
+        <BillType>3</BillType>
+        <RelatedBillNo>0</RelatedBillNo>
+        <BillAmount>0</BillAmount>
+        <OrderID>0</OrderID>
+        <DealStatus>0</DealStatus>
+        <DealTime>0001-01-01T00:00:00</DealTime>
+        <MerchantID>0</MerchantID>
+        <ExchangeRate>0</ExchangeRate>
+        <PayDeadLine>0001-01-01T00:00:00</PayDeadLine>
+        <BillItems />
+        <ResultItems />
+        <BillPaySubTotal />
+        <CashPaidList />
+      </Bill>
+    </BillList>
+  </PaymentBillResponse>
+</Response>
