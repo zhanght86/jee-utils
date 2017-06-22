@@ -8,15 +8,13 @@ import java.util.Map.Entry;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,18 +25,21 @@ public class HttpClientUtils {
 	private static Logger log = LoggerFactory.getLogger(HttpClientUtils.class);
 	
 	public static String put(String url, Map<String, String> params) {
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-
-		String body = null;
-
-		log.info("create httpput:" + url);
-		HttpPut put = putForm(url, params);
-		
-		body = invoke(httpclient, put);
-
-		httpclient.getConnectionManager().shutdown();
-
-		return body;
+		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		try {
+			log.info("create http put:" + url);
+			HttpPut put = putForm(url, params);
+			
+			return invoke(httpclient, put);
+		} catch (Exception e) {
+			log.error("http put has error", e);
+			return null;
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
 	}
 
 	/**
@@ -49,17 +50,21 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String post(String url, Object obj) {
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		String body = null;
+		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		try {
+			log.info("create http post:" + url);
+			HttpPost post = postJSONForm(url, null, null, obj);
 
-		log.info("create httppost:" + url);
-		HttpPost post = postJSONForm(url, null, null, obj);
-
-		body = invoke(httpclient, post);
-
-		httpclient.getConnectionManager().shutdown();
-
-		return body;
+			return invoke(httpclient, post);
+		} catch (Exception e) {
+			log.error("http post has error", e);
+			return null;
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
 	}
 	
 	/**
@@ -71,17 +76,22 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String post(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		String body = null;
+		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		try {
+			log.info("create http post:" + url);
+			HttpPost post = postJSONForm(url, headers, parameters, obj);
 
-		log.info("create httppost:" + url);
-		HttpPost post = postJSONForm(url, headers, parameters, obj);
-
-		body = invoke(httpclient, post);
-
-		httpclient.getConnectionManager().shutdown();
-
-		return body;
+			return invoke(httpclient, post);
+		} catch (Exception e) {
+			log.error("http post has error", e);
+			return null;
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
+		
 	}
 
 	/**
@@ -91,31 +101,41 @@ public class HttpClientUtils {
 	 * @return String
 	 */
 	public static String get(String url, Map<String, String> params) {
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		String body = null;
-		
-		if (params != null && !params.isEmpty()) {
+		CloseableHttpClient httpclient = HttpClientBuilder.create().build();
+		try {
+			// 将请求参数追加到url后面
+			appendRequestParameter(url, params);
+
+			log.info("create http get:" + url);
+			HttpGet get = new HttpGet(url);
+			
+			return invoke(httpclient, get);
+		} catch (Exception e) {
+			log.error("http get has error", e);
+			return null;
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+
+	private static void appendRequestParameter(String url, Map<String, String> params) {
+		if (StringUtils.isNotBlank(url) && params != null && !params.isEmpty()) {
 			boolean flag = true;
 			for (Iterator<Entry<String, String>> it = params.entrySet().iterator(); it.hasNext();) {
 				Entry<String, String> entry = it.next();
-				if (flag) {
+				if (flag && url.indexOf("?") == -1) {
 					url += "?";
 					flag = false;
 				}
 				url += "&" + entry.getKey() + "=" + entry.getValue();
 			}	
 		}
-
-		log.info("create httpget:" + url);
-		HttpGet get = new HttpGet(url);
-		body = invoke(httpclient, get);
-
-		httpclient.getConnectionManager().shutdown();
-
-		return body;
 	}
 
-	private static String invoke(DefaultHttpClient httpclient, HttpUriRequest httprequest) {
+	private static String invoke(CloseableHttpClient httpclient, HttpUriRequest httprequest) {
 		HttpResponse response = sendRequest(httpclient, httprequest);
 		return paseResponse(response);
 	}
@@ -125,27 +145,22 @@ public class HttpClientUtils {
 		HttpEntity entity = response.getEntity();
 
 		log.info("response status: " + response.getStatusLine());
-
-		String body = null;
 		try {
-			body = EntityUtils.toString(entity);
-			log.info(body);
-		} catch (IOException e) {
-			log.error("IOException...");
+			return EntityUtils.toString(entity);
+		} catch (Exception e) {
+			log.error("paseResponse has error", e);
+			return null;
 		}
-		return body;
 	}
 
-	private static HttpResponse sendRequest(DefaultHttpClient httpclient, HttpUriRequest request) {
+	private static HttpResponse sendRequest(CloseableHttpClient httpclient, HttpUriRequest request) {
 		log.info("execute request...");
 		HttpResponse response = null;
 
 		try {
 			response = httpclient.execute(request);
-		} catch (ClientProtocolException e) {
-			log.error("ClientProtocolException...");
-		} catch (IOException e) {
-			log.error("IOException...");
+		} catch (Exception e) {
+			log.error("sendRequest has error", e);
 		}
 		
 		return response;
@@ -171,16 +186,8 @@ public class HttpClientUtils {
 			}
 		}
 		// 添加请求参数
-		if (parameters != null && !parameters.isEmpty()) {
-			HttpParams params = new BasicHttpParams();
-			for (Iterator<Entry<String, String>> it = parameters.entrySet().iterator(); it.hasNext();) {
-				Entry<String, String> data = it.next();
-				String key = data.getKey();
-				String value = data.getValue();
-				params.setParameter(key, value);
-			}
-			httpost.setParams(params);
-		}
+		appendRequestParameter(url, parameters);
+		
 		// 设置JSON请求体
 		try {
 			httpost.setEntity(new StringEntity(JSON.toJSONString(obj)));
@@ -202,7 +209,7 @@ public class HttpClientUtils {
 		    
 		    log.info("set utf-8 form entity to httput");
 		    httput.setEntity(se);
-		} catch (UnsupportedEncodingException e) {
+		} catch (Exception e) {
 			log.error("UnsupportedEncodingException...");
 		}
 

@@ -16,7 +16,11 @@ import com.ckjava.utils.IOUtils;
 
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
-		
+		String datas = HttpClientUtils.get("https://ws.proxy.router.payment.fat45.qa.nt.ctripcorp.com/payment-route-apiservice/cache/value/get?key=payment:merchant:product:new:indexfat45&type=2", null);
+		System.out.println(datas);
+	}
+
+	public static void getClassPathFile() {
 		String originalBody = null;
 		try {
 			originalBody = IOUtils.getString(TestHttpClientUtils.class.getResourceAsStream("/body.txt")); // 从classpath下获取文件
