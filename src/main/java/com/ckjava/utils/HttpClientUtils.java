@@ -26,20 +26,19 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 
-@SuppressWarnings("deprecation")
 public class HttpClientUtils {
 	private static Logger log = LoggerFactory.getLogger(HttpClientUtils.class);
 	
@@ -237,6 +236,7 @@ public class HttpClientUtils {
 		return httput;
 	}
 	
+	
 	private static CloseableHttpClient initWeakSSLClient() {
 		HttpClientBuilder b = HttpClientBuilder.create();
 
@@ -252,7 +252,7 @@ public class HttpClientUtils {
 	    } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
 	        // do nothing, has been handled outside
 	    }
-	    b.setSSLContext(sslContext);
+	    b.setSslcontext(sslContext);
 
 	    // don't check Hostnames, either.
 	    //      -- use SSLConnectionSocketFactory.getDefaultHostnameVerifier(), if you don't want to weaken
@@ -283,7 +283,9 @@ public class HttpClientUtils {
 
 	    // finally, build the HttpClient;
 	    //      -- done!
-	    return b.build();
+	    CloseableHttpClient sslClient = b.build();
+	    
+	    return sslClient;
 	}
 	
 	public static void main(String[] args) {}
