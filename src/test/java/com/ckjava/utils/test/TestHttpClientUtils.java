@@ -17,6 +17,7 @@ import com.ckjava.utils.IOUtils;
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
 		//testPostApi();
+		testPostApi2();
 	}
 
 	public static void testGetApi() {
@@ -43,6 +44,19 @@ public class TestHttpClientUtils {
 		Map<String, String> body = new HashMap<>();
 		body.put("CustomerID", "M01230808");
 		String resultStr = HttpClientUtils.post(url, headers, parameters, body);
+		System.out.println(resultStr);
+	}
+	
+	public static void testPostApi2() {
+		String url = "http://ws.ebank.payment.fat18.qa.nt.ctripcorp.com/PaymentPasswordServiceAPI/GetUserPWDInfo";
+		Map<String, String> headers = new HashMap<>();
+		headers.put("Content-Type", "application/json;charset=utf-8");
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("CustomerID", "M01230808");
+
+		String body = "{     \"CustomerID\":\"M01230808\" }";
+		Object obj = JSON.parse(body);
+		String resultStr = HttpClientUtils.post(url, headers, parameters, obj);
 		System.out.println(resultStr);
 	}
 
