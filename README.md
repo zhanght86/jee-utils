@@ -37,3 +37,6 @@
 - fillMapWithString : 将 key1=value1&key2=value2的字符串存入Map中
 - objectToBytes : 将Java对象Object转换成Byte字节数组
 - bytesToObject : 将 Byte字节数组 转成 Java 对象
+
+### CommandUtils
+- execTask : 执行命令

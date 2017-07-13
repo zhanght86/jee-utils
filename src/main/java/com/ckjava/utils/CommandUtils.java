@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,45 +20,14 @@ public class CommandUtils {
 	
 	private static Logger logger = LoggerFactory.getLogger(CommandUtils.class);
 	
-	public static InputStream exec(String command) throws IOException {
-		return exec(command , null , null);
-	}
-
-	public static InputStream exec(String command, String workpath) throws IOException {
-		return exec(command , null , workpath);
-	}
-	
-	public static InputStream exec(String command, String[] envp, String workpath) throws IOException {
-		File dir = null;
-		if(null != workpath) {
-			dir = new File(workpath);
-		}
-		return Runtime.getRuntime().exec(command, envp, dir).getInputStream();
-	}
-
-	public static InputStream exec(String[] commands) throws IOException {
-		return exec(commands , null , null);
-	}
-
-	public static InputStream exec(String[] commands, String workpath) throws IOException {
-		return exec(commands , null , workpath);
-	}
-	
-	public static InputStream exec(String[] commands, String[] envp , String workpath) throws IOException {
-		File dir=null;
-		if(null != workpath) {
-			dir=new File(workpath);
-		}
-		return Runtime.getRuntime().exec(commands, envp, dir).getInputStream();
-	}
-	
 	/**
 	 * 执行命令
 	 * 
 	 * @param command 命令
+	 * @param charset 执行命令所在的系统编码
 	 * @param output 输出的结果
 	 */
-	public static void execTask(String command, StringBuffer output) {
+	public static void execTask(String command, String charset, StringBuffer output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -67,9 +36,9 @@ public class CommandUtils {
 		try {
 			proc = run.exec(command);// 启动另一个进程来执行命令
 			// 读取错误输出
-			executorService.submit(new StreamGobbler(proc.getErrorStream(), output));
+			executorService.submit(new StreamGobbler(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new StreamGobbler(proc.getInputStream(), output));
+			executorService.submit(new StreamGobbler(proc.getInputStream(), charset, output));
 		    // 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
 		    	output.append("执行命令没有正常终止");
@@ -96,11 +65,12 @@ public class CommandUtils {
 	/**
 	 * 执行命令并将输出写出到 OutputStream 中
 	 * 
-	 * @param command 命令
-	 * @param socketOutput OutputStream 
+	 * @param command 在所在系统执行的命令
+	 * @param charset 执行命令所在的系统编码
+	 * @param output OutputStream 
 	 * 
 	 */
-	public static void execTask(String command, OutputStream socketOutput) {
+	public static void execTask(String command, String charset, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -108,25 +78,24 @@ public class CommandUtils {
 		ExecutorService executorService = Executors.newFixedThreadPool(2);
 		try {
 			proc = run.exec(command);// 启动另一个进程来执行命令
-			StringBuffer data = new StringBuffer();
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
 			// 接收socket输入
 			// executorService.submit(new RobotThread(socketInput));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
-		    	writeString("执行命令没有正常终止", socketOutput);
+		    	writeString("执行命令没有正常终止", output);
 		    	logger.error("执行命令没有正常终止");
 		        if (proc.exitValue() == 1) { // p.exitValue()==0表示正常结束，1：非正常结束
-		        	writeString("执行命令没有正常返回结果，执行失败", socketOutput);
+		        	writeString("执行命令没有正常返回结果，执行失败", output);
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
-			writeString("执行命令出现异常", socketOutput);
+			writeString("执行命令出现异常", output);
 		} finally {
 			try {
 				proc.destroy(); 
@@ -137,7 +106,14 @@ public class CommandUtils {
 		logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 	}
 	
-	public static void execTask(String command, String startRobotSign, OutputStream socketOutput) {
+	/**
+	 * 执行命令并将输出写出到 OutputStream 中
+	 * @param command 在所在系统执行的命令
+	 * @param charset 执行命令所在的系统编码
+	 * @param startRobotSign
+	 * @param output OutputStream 
+	 */
+	public static void execTask(String command, String charset, String startRobotSign, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -145,25 +121,24 @@ public class CommandUtils {
 		ExecutorService executorService = Executors.newFixedThreadPool(3);
 		try {
 			proc = run.exec(command);// 启动另一个进程来执行命令
-			StringBuffer data = new StringBuffer();
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), socketOutput, data));
+			executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
 			// 启动机器人线程
 			executorService.submit(new RobotThread(startRobotSign));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
-		    	writeString("执行命令没有正常终止", socketOutput);
+		    	writeString("执行命令没有正常终止", output);
 		    	logger.error("执行命令没有正常终止");
 		        if (proc.exitValue() == 1) { // p.exitValue()==0表示正常结束，1：非正常结束
-		        	writeString("执行命令没有正常返回结果，执行失败", socketOutput);
+		        	writeString("执行命令没有正常返回结果，执行失败", output);
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
-			writeString("执行命令出现异常", socketOutput);
+			writeString("执行命令出现异常", output);
 		} finally {
 			try {
 				proc.destroy(); 
@@ -174,7 +149,7 @@ public class CommandUtils {
 		logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 	}
 	
-	public static class RobotThread implements Runnable {
+	private static class RobotThread implements Runnable {
 		private String startRobotSign;
 		
 		public RobotThread(String startRobotSign) {
@@ -213,63 +188,58 @@ public class CommandUtils {
 		
 	}
 
-	public static class StreamGobbler implements Runnable {
+	private static class StreamGobbler implements Runnable {
 		private InputStream is; // Process 正常和错误输出流
 		private StringBuffer output; // 输出信息
+		private String charset;
 
-		private StreamGobbler(InputStream is, StringBuffer output) {
+		private StreamGobbler(InputStream is, String charset, StringBuffer output) {
 	        this.is = is;
 	        this.output = output;
+	        this.charset = charset;
 	    }  
 	  
 	    public void run() {
-	    	InputStreamReader isr = null;
 	    	BufferedReader inReader = null;
 	    	String tempStr = null;
 	        try {
-	            isr = new InputStreamReader(is);
-	            inReader = new BufferedReader(isr);
+	            inReader = new BufferedReader(new InputStreamReader(is, Charset.forName(charset)));
 			    while ((tempStr = inReader.readLine()) != null) {
 			    	output.append(tempStr).append("\n");
 			    }
-	        } catch (IOException ioe) {
-	        	logger.error("read Process InputStream has error");
+	        } catch (IOException e) {
+	        	logger.error("read Process InputStream has error", e);
 	        } finally {
 	        	try {
 	        		inReader.close();
-	        		isr.close();
 				} catch (Exception e) {
 				}
 	        }
 	    }
 	}
 	
-	public static class WriteToStream implements Runnable {
-	    private InputStream input; // Process 输入流
-	    private OutputStream socketOutput; // socket 输出到外部,不要关闭
-	    private StringBuffer data;
+	private static class WriteToStream implements Runnable {
+	    private InputStream input; // Process stream
+	    private OutputStream output; // don't close!
+	    private String charset;
 	    
-	    private WriteToStream(InputStream input, OutputStream socketOutput, StringBuffer data) {
+	    private WriteToStream(InputStream input, String charset, OutputStream output) {
 	        this.input = input;
-	        this.socketOutput = socketOutput;
-	        this.data = data;
+	        this.charset = charset;
+	        this.output = output;
 	    }
 	    
 	    public void run() {
 	    	BufferedReader inReader = null;
-	    	DataOutputStream socketDos = null;
 	        try {
-	            inReader = new BufferedReader(new InputStreamReader(input));
-	            socketDos = new DataOutputStream(socketOutput);
-	            
+	            inReader = new BufferedReader(new InputStreamReader(input, Charset.forName(charset)));
+
 	            String tempStr = null;
 			    while ((tempStr = inReader.readLine()) != null) {
-			    	data.append(tempStr);
-			    	socketDos.writeUTF(tempStr);
+			    	writeString(tempStr, output);
 			    }
-			    socketDos.flush();
 	        } catch (IOException ioe) {
-	        	logger.error("read Process InputStream has error");
+	        	logger.error("WriteToStream has error", ioe);
 	        } finally {
 	        	try {
 	        		inReader.close();
@@ -280,125 +250,14 @@ public class CommandUtils {
 	    }
 	}
 	
-	public static class ReadWriteToStream implements Runnable {
-	    private InputStream input; // 外部输入流, 不要关闭
-	    private OutputStream poutput; // Process输入流, 外部向process写入数据
-	    
-	    private ReadWriteToStream(InputStream input, OutputStream poutput) {
-	        this.input = input;
-	        this.poutput = poutput;
-	    }  
-	  
-	    public void run() {
-	    	InputStreamReader isr = null;
-	    	BufferedReader inReader = null;
-	    	PrintWriter pw = null;
-	        try {
-	        	isr = new InputStreamReader(input);
-	            inReader = new BufferedReader(isr);
-	            pw = new PrintWriter(poutput);
-	            String tempStr = null;
-			    while ((tempStr = inReader.readLine()) != null) {
-			    	logger.debug("process input:"+tempStr);
-			    	pw.write(tempStr);
-			    }
-			    pw.flush();
-	        } catch (IOException ioe) {
-	        	logger.error("read Process InputStream has error");
-	        } finally {
-	        	try {
-	        		pw.close();
-				} catch (Exception e) {
-				}
-	        }
-	    }
-	}
-	
-	public static class WriteToStreamOnSign implements Runnable {
-	    private OutputStream output; // Process输入流, 外部向process写入数据
-	    private StringBuffer data;
-	    
-	    private WriteToStreamOnSign(OutputStream output, StringBuffer data) {
-	        this.output = output;
-	        this.data = data;
-	    }  
-	  
-	    public void run() {
-	    	PrintWriter pw = null;
-	        try {
-	            pw = new PrintWriter(output);
-	            long current = System.currentTimeMillis();
-			    while (true) {
-			    	if (System.currentTimeMillis() - current >= 1000) {
-			    		logger.info("wait for [Successfully opened log file]");
-			    		current = System.currentTimeMillis();
-			    	}
-			    	if (data.toString().contains("Successfully opened log file")) {
-			    		logger.debug("process input:Q");
-			    		System.out.println("process input:Q");
-				    	pw.write("Q");
-				    	break;
-			    	}
-			    }
-			    pw.flush();
-	        } catch (Exception ioe) {
-	        	logger.error("read Process InputStream has error");
-	        } finally {
-	        	try {
-	        		pw.close();
-				} catch (Exception e) {
-				}
-	        }
-	    }
-	}
-	
-	public static class PrintToStream implements Runnable {
-	    private InputStream input; // Process 输入流
-	    private OutputStream output; // 输出到外部,不要关闭
-	  
-	    private PrintToStream(InputStream input, OutputStream output) {
-	        this.input = input;
-	        this.output = output;
-	    }  
-	  
-	    public void run() {
-	    	InputStreamReader isr = null;
-	    	BufferedReader inReader = null;
-	    	PrintWriter pw = null;
-	        try {
-	        	isr = new InputStreamReader(input);
-	            inReader = new BufferedReader(isr);
-	            pw = new PrintWriter(output);
-	            String tempStr = null;
-			    while ((tempStr = inReader.readLine()) != null) {
-			    	pw.println(tempStr);
-			    }
-			    pw.flush();
-	        } catch (IOException ioe) {
-	        	logger.error("read Process InputStream has error");
-	        } finally {
-	        	try {
-	        		input.close();
-				} catch (Exception e) {
-				}
-	        }
-	    }
-	}
-	
-	public static void writeString(String message, OutputStream output) {
+	private static void writeString(String message, OutputStream output) {
         try {
         	DataOutputStream dos = new DataOutputStream(output); // 外部输出流,不要关闭
         	dos.writeUTF(message);
         	dos.flush();
         } catch (IOException e) {
-        	logger.info("Connection object writeString method has error", e);
+        	logger.info("CommandUtils writeString method has error", e);
         }
-    }
-	
-	public static void printString(String message, OutputStream output) {
-        PrintWriter pw = new PrintWriter(output); // 外部输出流,不要关闭
-		pw.println(message);
-		pw.flush();
     }
 	
 }

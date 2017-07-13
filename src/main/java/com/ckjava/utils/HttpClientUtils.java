@@ -44,11 +44,11 @@ public class HttpClientUtils {
 	
 	private static int timeout = 100000;
 	
-	public static String put(String url, Map<String, String> params) {
+	public static String put(String url, Object obj) {
 		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
 			log.info("create http put:" + url);
-			HttpPut put = putForm(url, params);
+			HttpPut put = putForm(url, obj);
 			
 			return invoke(httpclient, put);
 		} catch (Exception e) {
@@ -60,6 +60,33 @@ public class HttpClientUtils {
 			} catch (IOException e) {
 			}
 		}
+	}
+	
+	/**
+	 * put 请求, body 是 json
+	 * @param url String
+	 * @param headers Map<String, String> 请求头
+	 * @param parameters Map<String, String> 请求参数
+	 * @param obj Object 请求体 
+	 * @return String
+	 */
+	public static String put(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
+		CloseableHttpClient httpclient = initWeakSSLClient();
+		try {
+			log.info("create http put:" + url);
+			HttpPut put = putJSONForm(url, headers, parameters, obj);
+
+			return invoke(httpclient, put);
+		} catch (Exception e) {
+			log.error("http put has error", e);
+			return null;
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
+		
 	}
 
 	/**
@@ -216,6 +243,38 @@ public class HttpClientUtils {
 		}
 
 		return httpost;
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * @param headers 
+	 * @param parameters
+	 * @param obj
+	 * @return
+	 */
+	private static HttpPut putJSONForm(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
+		HttpPut httput = new HttpPut(url);
+		// 添加请求头
+		if (headers != null && !headers.isEmpty()) {
+			for (Iterator<Entry<String, String>> it = headers.entrySet().iterator(); it.hasNext();) {
+				Entry<String, String> data = it.next();
+				String key = data.getKey();
+				String value = data.getValue();
+				httput.addHeader(key, value);
+			}
+		}
+		// 添加请求参数
+		appendRequestParameter(url, parameters);
+		
+		// 设置JSON请求体
+		try {
+			httput.setEntity(new StringEntity(JSON.toJSONString(obj)));
+		} catch (UnsupportedEncodingException e) {
+			log.error("postForm has UnsupportedEncodingException", e);
+		}
+
+		return httput;
 	}
 	
 	private static HttpPut putForm(String url, Object obj) {
