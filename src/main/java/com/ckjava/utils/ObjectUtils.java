@@ -1,12 +1,22 @@
 package com.ckjava.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ObjectUtils extends org.apache.commons.lang3.ObjectUtils {
 
+	private static final Logger logger = LoggerFactory.getLogger(ObjectUtils.class);
+	
 	/**
 	 * 对象的所有字段都为空才返回true
 	 * 
@@ -126,4 +136,54 @@ public class ObjectUtils extends org.apache.commons.lang3.ObjectUtils {
 		}
 		return dataMap;
 	}
+	
+	/**
+	 * 将Java对象Object转换成Byte字节数组
+	 * 
+	 * @param object
+	 * @return byte[]
+	 */
+	public static byte[] objectToBytes(final Serializable object) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos =  null;
+        try {
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            oos.flush();
+            return baos.toByteArray();
+        } catch (Exception e) {
+        	logger.error("ObjectUtils.objectToBytes has error", e);
+			return null;
+		} finally {
+        	try {
+        		oos.close();
+            	baos.close();
+			} catch (Exception e) {
+			}
+        }
+    }
+	
+	/**
+	 * 将 Byte字节数组 转成 Java 对象
+	 * @param bytes
+	 * @return
+	 */
+	public static Object bytesToObject(byte[] bytes) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ObjectInputStream ois =  null;
+        try {
+            ois = new ObjectInputStream(bais);
+            return ois.readObject();
+        } catch (Exception e) {
+        	logger.error("ObjectUtils.bytesToObject has error", e);
+			return null;
+		} finally {
+        	try {
+        		ois.close();
+        		bais.close();
+			} catch (Exception e) {
+			}
+        }
+    }
+
 }

@@ -1,12 +1,29 @@
 package com.ckjava.utils.test;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.ckjava.utils.ObjectUtils;
 
 public class TestObjectUtils {
+	
+	@Test
+	@SuppressWarnings("unchecked")
+	public void objectToBytes() {
+		String name = "ck";
+		String age = "30";
+		HashMap<String, String> data = new HashMap<>();
+		data.put("name", name);
+		data.put("age", age);
+		byte[] bytes = ObjectUtils.objectToBytes(data);
+		
+		HashMap<String, String> objMap = (HashMap<String, String>) ObjectUtils.bytesToObject(bytes);
+		Assert.assertEquals(objMap.get("name"), name);
+		Assert.assertEquals(objMap.get("age"), age);
+	}
 
 	@Test
 	public void testGetObjectString() {
