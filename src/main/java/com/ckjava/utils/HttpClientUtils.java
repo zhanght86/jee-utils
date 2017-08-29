@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -15,8 +16,10 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -140,25 +143,23 @@ public class HttpClientUtils {
 		}
 		
 	}
-
+	
 	/**
-	 * get 请求
-	 * @param url url
-	 * @param params Map<String, String> 请求参数
+	 * post 请求
+	 * @param url String
+	 * @param headers Map<String, String> 请求头
+	 * @param parameters Map<String, String> 请求参数
 	 * @return String
 	 */
-	public static String get(String url, Map<String, String> params) {
+	public static String postUrlEncodeForm(String url, Map<String, String> headers, Map<String, String> parameters, List<NameValuePair> formParams) {
 		CloseableHttpClient httpclient = initWeakSSLClient();
 		try {
-			// 将请求参数追加到url后面
-			appendRequestParameter(url, params);
+			log.info("create http post:" + url);
+			HttpPost httpPost = postEncodeForm(url, headers, parameters, formParams);
 
-			log.info("create http get:" + url);
-			HttpGet get = new HttpGet(url);
-			
-			return invoke(httpclient, get);
+			return invoke(httpclient, httpPost);
 		} catch (Exception e) {
-			log.error("http get has error", e);
+			log.error("http post has error", e);
 			return null;
 		} finally {
 			try {
@@ -166,20 +167,68 @@ public class HttpClientUtils {
 			} catch (IOException e) {
 			}
 		}
+		
 	}
 
-	private static void appendRequestParameter(String url, Map<String, String> params) {
+	/**
+	 * get 请求
+	 * @param url url
+	 * @param headers Map<String, String> 请求头
+	 * @param params Map<String, String> 请求参数
+	 * @return String
+	 */
+	public static String get(String url, Map<String, String> headers, Map<String, String> params) {
+		CloseableHttpClient httpClient = initWeakSSLClient();
+		try {
+			// 将请求参数追加到url后面
+			url = appendRequestParameter(url, params);
+
+			log.info("create http get:" + url);
+			HttpGet httpGet = new HttpGet(url);
+			
+			// 添加请求头
+			if (headers != null && !headers.isEmpty()) {
+				for (Iterator<Entry<String, String>> it = headers.entrySet().iterator(); it.hasNext();) {
+					Entry<String, String> data = it.next();
+					String key = data.getKey();
+					String value = data.getValue();
+					httpGet.addHeader(key, value);
+				}
+			}
+			
+			return invoke(httpClient, httpGet);
+		} catch (Exception e) {
+			log.error("http get has error", e);
+			return null;
+		} finally {
+			try {
+				httpClient.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+
+	/**
+	 * 对于 String 类型的 url，这里传入的是 值 不是一个引用，所以需要返回追加好的 String
+	 * 
+	 * @param url
+	 * @param params
+	 * @return
+	 */
+	private static String appendRequestParameter(String url, Map<String, String> params) {
 		if (StringUtils.isNotBlank(url) && params != null && !params.isEmpty()) {
 			boolean flag = true;
 			for (Iterator<Entry<String, String>> it = params.entrySet().iterator(); it.hasNext();) {
 				Entry<String, String> entry = it.next();
 				if (flag && url.indexOf("?") == -1) {
-					url += "?";
+					url += "?" + entry.getKey() + "=" + entry.getValue();
 					flag = false;
+				} else {
+					url += "&" + entry.getKey() + "=" + entry.getValue();
 				}
-				url += "&" + entry.getKey() + "=" + entry.getValue();
-			}	
+			}
 		}
+		return url;
 	}
 
 	private static String invoke(CloseableHttpClient httpclient, HttpUriRequest httprequest) {
@@ -222,6 +271,9 @@ public class HttpClientUtils {
 	 * @return
 	 */
 	private static HttpPost postJSONForm(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
+		// 添加请求参数
+		url = appendRequestParameter(url, parameters);
+		
 		HttpPost httpost = new HttpPost(url);
 		// 添加请求头
 		if (headers != null && !headers.isEmpty()) {
@@ -232,8 +284,6 @@ public class HttpClientUtils {
 				httpost.addHeader(key, value);
 			}
 		}
-		// 添加请求参数
-		appendRequestParameter(url, parameters);
 		
 		// 设置JSON请求体
 		try {
@@ -253,7 +303,45 @@ public class HttpClientUtils {
 	 * @param obj
 	 * @return
 	 */
+	private static HttpPost postEncodeForm(String url, Map<String, String> headers, Map<String, String> parameters, List<NameValuePair> formParams) {
+		// 添加请求参数
+		url = appendRequestParameter(url, parameters);
+		
+		HttpPost httpPost = new HttpPost(url);
+		// 添加请求头
+		if (headers != null && !headers.isEmpty()) {
+			for (Iterator<Entry<String, String>> it = headers.entrySet().iterator(); it.hasNext();) {
+				Entry<String, String> data = it.next();
+				String key = data.getKey();
+				String value = data.getValue();
+				httpPost.addHeader(key, value);
+			}
+		}
+		
+		try {
+			if (formParams != null && !formParams.isEmpty()) {
+				HttpEntity entity = new UrlEncodedFormEntity(formParams, "UTF-8");
+				httpPost.setEntity(entity);
+			}
+		} catch (Exception e) {
+			log.error("postEncodeForm has error", e);
+		}
+
+		return httpPost;
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * @param headers 
+	 * @param parameters
+	 * @param obj
+	 * @return
+	 */
 	private static HttpPut putJSONForm(String url, Map<String, String> headers, Map<String, String> parameters, Object obj) {
+		// 添加请求参数
+		url = appendRequestParameter(url, parameters);
+				
 		HttpPut httput = new HttpPut(url);
 		// 添加请求头
 		if (headers != null && !headers.isEmpty()) {
@@ -264,8 +352,6 @@ public class HttpClientUtils {
 				httput.addHeader(key, value);
 			}
 		}
-		// 添加请求参数
-		appendRequestParameter(url, parameters);
 		
 		// 设置JSON请求体
 		try {

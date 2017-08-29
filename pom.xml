@@ -152,6 +152,13 @@
 			<version>3.1.0.201310021548-r</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/fluent-hc -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+			<version>4.3.1</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

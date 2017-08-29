@@ -416,9 +416,9 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 	 * @param fileName 根目录下的待压缩的文件名或文件夹名，其中*或""表示跟目录下的全部文件
 	 * @param excludePath String[] 排除的文件路径
 	 * @param excludeFile String[] 排除的文件名称
-	 * @param descFileName 目标zip文件
+	 * @param descFileName File 目标zip文件
 	 */
-	public static void zipFiles(String srcDirName, String fileName, String[] excludePath, String[] excludeFile, String descFileName) {
+	public static void zipFiles(String srcDirName, String fileName, String[] excludePath, String[] excludeFile, File descFile) {
 		// 判断目录是否存在
 		if (srcDirName == null) {
 			logger.debug("文件压缩失败，目录 " + srcDirName + " 不存在!");
@@ -430,38 +430,47 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 			return;
 		}
 		String dirPath = fileDir.getAbsolutePath();
-		File descFile = new File(descFileName);
 		try {
 			ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(descFile));
 			if ("*".equals(fileName) || "".equals(fileName)) {
-				FileUtils.zipDirectoryToZipFile(dirPath, fileDir, excludePath, excludeFile, zouts);
+				zipDirectoryToZipFile(dirPath, fileDir, excludePath, excludeFile, zouts);
 			} else {
 				File file = new File(fileDir, fileName);
 				if (file.isFile()) {
-					FileUtils.zipFilesToZipFile(dirPath, file, zouts);
+					zipFilesToZipFile(dirPath, file, zouts);
 				} else {
-					FileUtils.zipDirectoryToZipFile(dirPath, file, excludePath, excludeFile, zouts);
+					zipDirectoryToZipFile(dirPath, file, excludePath, excludeFile, zouts);
 				}
 			}
 			zouts.close();
-			logger.debug(descFileName + " 文件压缩成功!");
+			logger.debug(descFile.getName() + " 文件压缩成功!");
 		} catch (Exception e) {
 			logger.debug("文件压缩失败：" + e.getMessage());
 			e.printStackTrace();
 		}
 	}
 	
-	public static void zipFile(File file) {
+	/**
+	 * 将文件压缩成zip, 并返回zip文件
+	 * 
+	 * @param file File 原始文件
+	 * @return  File 原始文件带上 .zip 后缀后返回
+	 */
+	public static File zipFile(File file) {
 		if (file.exists()) {
 			String filePath = file.getParent();
 			try {
-				ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(filePath+File.separator+file.getName()+"_zip.zip"));
+				File zipFile = new File(filePath+File.separator+file.getName()+".zip");
+				ZipOutputStream zouts = new ZipOutputStream(new FileOutputStream(zipFile));
 				zipFilesToZipFile(filePath, file, zouts);
 				zouts.close();
+				return zipFile;
 			} catch (Exception e) {
-				logger.debug("文件压缩失败：" + e.getMessage());
-				e.printStackTrace();
+				logger.error("zip file fail" + e);
+				return null;
 			}
+		} else {
+			throw new RuntimeException("file not exits");
 		}
 	}
 
@@ -496,13 +505,13 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 						continue;
 					}
 					// 如果是文件，则调用文件压缩方法
-					FileUtils.zipFilesToZipFile(dirPath, files[i], zouts);
+					zipFilesToZipFile(dirPath, files[i], zouts);
 				} else {
 					if (ArrayUtils.contains(excludePath, tempFile.getName())) {
 						continue;
 					}
 					// 如果是目录，则递归调用
-					FileUtils.zipDirectoryToZipFile(dirPath, files[i], excludePath, excludeFile, zouts);
+					zipDirectoryToZipFile(dirPath, files[i], excludePath, excludeFile, zouts);
 				}
 			}
 		}

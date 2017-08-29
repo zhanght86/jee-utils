@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -84,6 +85,8 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 	public static String getWeek(Date date) {
 		return getDateString(date, WEEKDAY);
 	}
+	
+	
 
 	/**
 	 * 日期型字符串转化为日期 格式 { "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm",
@@ -133,21 +136,19 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 		long t = new Date().getTime() - date.getTime();
 		return t / (60 * 1000);
 	}
-
+	
 	/**
-	 * 转换为时间（天,时:分:秒.毫秒）
+	 * 格式化日期
 	 * 
-	 * @param timeMillis
-	 * @return
+	 * @param time Date long 类型
+	 * @param format 日期格式  yyyy-MM-dd 或者 yyyy-MM-dd HH:mm:ss
+	 * @return String
 	 */
-	public static String formatDateTime(long timeMillis) {
-		long day = timeMillis / (24 * 60 * 60 * 1000);
-		long hour = (timeMillis / (60 * 60 * 1000) - day * 24);
-		long min = ((timeMillis / (60 * 1000)) - day * 24 * 60 - hour * 60);
-		long s = (timeMillis / 1000 - day * 24 * 60 * 60 - hour * 60 * 60 - min * 60);
-		long sss = (timeMillis - day * 24 * 60 * 60 * 1000 - hour * 60 * 60 * 1000 - min * 60 * 1000 - s * 1000);
-		return (day > 0 ? day + "," : "") + hour + ":" + min + ":" + s + "." + sss;
+	public static String formatTime(long time, String format) {
+		Date date = new Date(time);
+		return getDateString(date, format);
 	}
+	
     /**
      * 分割时间段
     * @Title: getPeriodTime 
@@ -194,10 +195,64 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 		return (afterTime - beforeTime) / (1000 * 60 * 60 * 24);
 	}
 	
-	public static String getAssignDay(int offset) {
+	/**
+	 * 获取指定日期的偏移日期
+	 * 
+	 * @param time Date, 指定日期
+	 * @param offset int, 偏移量, 单位:天
+	 * @return Date 便宜后的日期
+	 */
+	public static Date getAssignDay(Date time, int offset) {
 		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(time);
 		calendar.add(Calendar.DAY_OF_MONTH, offset);
-		return DateFormatUtils.format(calendar.getTime(), DateUtils.DATE);
+		return calendar.getTime();
+	}
+	
+	/**
+	 * 获取指定日期的当天开始时间, 精确到 00:00:00
+	 * @param 指定日期
+	 * @return 当天开始时间
+	 */
+	public static Date getBeginDay(Date time) {
+		String dateStr = getDateString(time, DATE).concat(" 00:00:00");
+		try {
+			return parseDate(dateStr, DATETIME);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * 获取指定日期的当天结束时间,精确到 23:59:59
+	 * @param time 指定日期 
+	 * @return 当天开始时间
+	 */
+	public static Date getEndDay(Date time) {
+		String dateStr = getDateString(time, DATE).concat(" 23:59:59");
+		try {
+			return parseDate(dateStr, DATETIME);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * 获取指定日期的周一时间
+	 * 
+	 * @param currentDate 指定日期, 如果为空表示当前时间
+	 * @return
+	 */
+	public static Date getMonday(Date currentDate) {
+		Calendar can = Calendar.getInstance(Locale.CHINA);
+		if (currentDate != null) {
+			can.setTime(currentDate);
+		}
+		can.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		
+		return can.getTime();
 	}
 	
 }

@@ -12,24 +12,55 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.codec.binary.Base64;
-import org.junit.Test;
 
 import com.ckjava.utils.FileUtils;
 
 public class TestFileUtils {
 	
-	@Test
-	public void testzipFiles() {
-		String compressDir = "D:/git-workspace/"; 
-		String zipFile = "D:/git-workspace_zip.zip";
+	public static void main(String[] args) {
+		String path = "D:/git-workspace";
+		String desDir = "D:/BaiduYunDownload/encode-files";
+		backupDir(path, desDir);
+	}
+	
+	public static void backupDir(String path, String desDir) {
+		File zipFile = new File(path + ".zip");
+		File encodeFile = new File(path + "_zip_encode");
+		
 		String[] excludePath = {".svn",".git",".metadata",".recommenders", "target", "bin", ".settings", "classes", "logs"}, excludeFile = {".class"};
-		FileUtils.zipFiles(compressDir, "*", excludePath, excludeFile, zipFile);
-		//FileUtils.moveFileToDirectory(srcFile, destDir, createDestDir);
-		System.out.println("finish");
+		FileUtils.zipFiles(path, "*", excludePath, excludeFile, zipFile);
+		
+		enCodeFile(zipFile, encodeFile);
+		
+		File finalZipFile = FileUtils.zipFile(encodeFile);
+		
+		try {
+			File desFile = new File(desDir + File.separator + finalZipFile.getName());
+			if (desFile.exists()) {
+				desFile.delete();
+			}
+			FileUtils.moveFileToDirectory(finalZipFile, new File(desDir), true);
+			
+			if (zipFile.delete()) {
+				System.out.println("delete " + zipFile);
+			}
+			
+			if (encodeFile.delete()) {
+				System.out.println("delete " + encodeFile);
+			}
+			
+			if (finalZipFile.delete()) {
+				System.out.println("delete " + finalZipFile.getAbsolutePath());
+			}
+			
+			System.out.println("finish");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
-	@Test
-	public void deCodeFile() {
+	public static void deCodeFile() {
 		String data = "D:\\BaiduYunDownload\\dagger.txt";
 		
 		String temp = "";
@@ -48,16 +79,18 @@ public class TestFileUtils {
 		System.out.println("done");
 	}
 
-	@Test
-	public void enCodeFile() {
-		String dataFile = "D:/git-workspace_zip.zip";
-		String enCodeFile = "D:/git-workspace_zip_encode";
-		
+	/**
+	 * 将 zip文件通过 base64 处理 
+	 * 
+	 * @param zipFile
+	 * @param encodeFile
+	 */
+	public static void enCodeFile(File zipFile, File encodeFile) {
 		int temp = 0;
 		byte[] b = new byte[102400];
 		try {
-			InputStream is = new FileInputStream(new File(dataFile));
-			BufferedWriter os = new BufferedWriter(new FileWriter(new File(enCodeFile)));
+			InputStream is = new FileInputStream(zipFile);
+			BufferedWriter os = new BufferedWriter(new FileWriter(encodeFile));
 			while ((temp = is.read(b, 0, b.length)) != -1) {
 				byte[] realdata = new byte[temp];
 				System.arraycopy(b, 0, realdata, 0, temp);
@@ -67,29 +100,9 @@ public class TestFileUtils {
 			}
 			is.close();
 			os.close();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("done");
-	}
-	
-	@Test
-	public void zipFile() {
-		FileUtils.zipFile(new File("D:/git-workspace_zip_encode"));
-		//FileUtils.moveFileToDirectory(srcFile, destDir, createDestDir);
-		System.out.println("finish");
-	}
-	
-	@Test
-	public void moveFile() {
-		String srcFile = "D:/git-workspace_zip_encode_zip.zip";
-		try {
-			FileUtils.moveFileToDirectory(new File(srcFile), new File("D:/BaiduYunDownload/encode-files"), true);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("finish");
 	}
 	
 }

@@ -1,6 +1,8 @@
 package com.ckjava.utils.test;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +11,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.fluent.Content;
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.message.BasicNameValuePair;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ckjava.utils.HttpClientUtils;
@@ -16,12 +26,14 @@ import com.ckjava.utils.IOUtils;
 
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
-		//testPostApi();
+		// testPostApi();
 		testPostApi2();
 	}
 
 	public static void testGetApi() {
-		String datas = HttpClientUtils.get("https://ws.proxy.router.payment.fat45.qa.nt.ctripcorp.com/payment-route-apiservice/cache/value/get?key=payment:merchant:product:new:indexfat45&type=2", null);
+		String datas = HttpClientUtils.get(
+				"https://ws.proxy.router.payment.fat45.qa.nt.ctripcorp.com/payment-route-apiservice/cache/value/get?key=payment:merchant:product:new:indexfat45&type=2",
+				null, null);
 		System.out.println(datas);
 	}
 
@@ -46,7 +58,7 @@ public class TestHttpClientUtils {
 		String resultStr = HttpClientUtils.post(url, headers, parameters, body);
 		System.out.println(resultStr);
 	}
-	
+
 	public static void testPostApi2() {
 		String url = "http://ws.ebank.payment.fat18.qa.nt.ctripcorp.com/PaymentPasswordServiceAPI/GetUserPWDInfo";
 		Map<String, String> headers = new HashMap<>();
@@ -66,12 +78,14 @@ public class TestHttpClientUtils {
 	public static void testApiPerformance() {
 		AtomicInteger success = new AtomicInteger();
 		AtomicInteger fail = new AtomicInteger();
-		
-		ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		
+
+		ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors
+				.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
 		String originalBody = null;
 		try {
-			originalBody = IOUtils.getString(new FileInputStream("D:/git-workspace/jee-utils/src/test/resources/body.txt"));
+			originalBody = IOUtils
+					.getString(new FileInputStream("D:/git-workspace/jee-utils/src/test/resources/body.txt"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -79,16 +93,16 @@ public class TestHttpClientUtils {
 		Map<String, String> data = new HashMap<String, String>();
 		data.put("name", "test_api_save_batch_6");
 		data.put("originalBody", originalBody);
-		dataList.add(data);	
-		
+		dataList.add(data);
+
 		long l = System.currentTimeMillis();
 		for (int i = 0; i < 10000; i++) {
 			executorService.submit(new ApiSaveWorker(dataList, success, fail));
 		}
-		
+
 		while (true) {
 			if (executorService.getActiveCount() == 0) {
-				long consume = System.currentTimeMillis()-l;
+				long consume = System.currentTimeMillis() - l;
 				System.out.println(consume);
 				System.out.println("consume time is " + (consume) / (1000D) + "秒");
 				System.out.println("success = " + success.get());
@@ -100,12 +114,10 @@ public class TestHttpClientUtils {
 		/**
 		 * 200000
 		 * 
-		 *  consume time is 1631.631秒
-			success = 200000
-			fail = 0
+		 * consume time is 1631.631秒 success = 200000 fail = 0
 		 */
 	}
-	
+
 	public static class ApiSaveWorker implements Runnable {
 
 		private Object data;
@@ -121,7 +133,8 @@ public class TestHttpClientUtils {
 
 		@Override
 		public void run() {
-			String resultStr = HttpClientUtils.post("http://10.3.6.98:8080/Dare/api/datareplay/originaldata/save", data);
+			String resultStr = HttpClientUtils.post("http://10.3.6.98:8080/Dare/api/datareplay/originaldata/save",
+					data);
 			JSONObject jsonobj = JSON.parseObject(resultStr);
 			if (jsonobj.getString("code").equals("200")) {
 				success.getAndAdd(1);
@@ -131,6 +144,83 @@ public class TestHttpClientUtils {
 				System.out.println("fail");
 			}
 		}
-		
+
 	}
+
+	//@Test
+	public void testContentType() {
+		try {
+			Map<String, String> headers = new HashMap<String, String>();
+			headers.put("Content-Type", "application/x-www-form-urlencoded");
+
+			Map<String, String> params = new HashMap<String, String>();
+			params.put(URLEncoder.encode("api.token", "UTF-8"),
+					URLEncoder.encode("api-ipsbw4rx6cigtt7tcdqeiihdv4sz", "UTF-8"));
+
+			params.put(URLEncoder.encode("task_id", "UTF-8"), URLEncoder.encode("8", "UTF-8"));
+
+			String result = HttpClientUtils
+					.get("http://finance.phabricator.dev.qa.nt.ctripcorp.com/api/maniphest.search", headers, params);
+			System.out.println(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	//@Test
+	public void testPostUrlEncodeForm() {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Content-Type", "application/x-www-form-urlencoded");
+
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("api.token", "api-ipsbw4rx6cigtt7tcdqeiihdv4sz");
+
+		List<NameValuePair> formParams = new ArrayList<>();
+		formParams.add(new BasicNameValuePair("params[task_id]", "445"));
+		formParams.add(new BasicNameValuePair("output", "json"));
+		//formParams.add(new BasicNameValuePair("__form__", "1"));
+
+		String result = HttpClientUtils.postUrlEncodeForm("http://finance.phabricator.dev.qa.nt.ctripcorp.com/api/maniphest.info", headers, params, formParams);
+		System.out.println(result);
+	}
+	
+	//@Test
+	public void testCurl() {
+		try {
+			Response res = Request.Post("http://finance.phabricator.dev.qa.nt.ctripcorp.com/api/maniphest.info")
+					.bodyForm(Form.form()
+					.add("task_id", "445")
+					.add("api.token", "api-ipsbw4rx6cigtt7tcdqeiihdv4sz")
+					.build())
+					.execute();
+			Content content = res.returnContent();
+			System.out.println(content.toString());
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//@Test
+	public void testPhabricatorAPI() {
+		try {
+			Response res = Request.Post("http://test.pha.com/api/maniphest.search")
+					.bodyForm(Form.form()
+					.add("api.token", "api-6mlsh56cb5uexqbxgpnvah6djhmc")
+					.add("queryKey", "all")
+					.add("constraints[statuses][0]", "open")
+					.add("attachments[subscribers]", "1")
+					.add("order[0]", "id")
+					.build())
+					.execute();
+			Content content = res.returnContent();
+			System.out.println(content.toString());
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
