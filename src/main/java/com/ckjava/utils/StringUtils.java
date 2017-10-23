@@ -40,6 +40,8 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 		data = data.replaceAll(">", "&gt;");
 		data = data.replaceAll("\"", "&quot;");
 		data = data.replaceAll("'", "&apos;");
+		
+		data = data.replaceAll("•", "&#8226;"); // 加重号 U+2022
 		return data;
 	}
 	

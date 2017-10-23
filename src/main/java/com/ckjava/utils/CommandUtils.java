@@ -27,7 +27,7 @@ public class CommandUtils {
 	 * @param charset 执行命令所在的系统编码
 	 * @param output 输出的结果
 	 */
-	public static void execTask(String command, String charset, StringBuffer output) {
+	public static StringBuffer execTask(String command, String charset, StringBuffer output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -49,17 +49,22 @@ public class CommandUtils {
 		        }
 		        
 		    }
+		    
+		    return output;
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			output.append("执行命令出现异常");
+			
+			return output;
 		} finally {
 			try {
 				proc.destroy();
 				executorService.shutdown();
 			} catch (Exception e2) {
 			}
+		
+			logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		}
-		logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 	}
 	
 	/**
@@ -70,7 +75,7 @@ public class CommandUtils {
 	 * @param output OutputStream 
 	 * 
 	 */
-	public static void execTask(String command, String charset, OutputStream output) {
+	public static OutputStream execTask(String command, String charset, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -93,17 +98,20 @@ public class CommandUtils {
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
+		    return output;
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			writeString("执行命令出现异常", output);
+			return output;
 		} finally {
 			try {
 				proc.destroy(); 
 				executorService.shutdown();	
 			} catch (Exception e2) {
 			}
+			logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		}
-		logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
+		
 	}
 	
 	/**
@@ -113,7 +121,7 @@ public class CommandUtils {
 	 * @param startRobotSign
 	 * @param output OutputStream 
 	 */
-	public static void execTask(String command, String charset, String startRobotSign, OutputStream output) {
+	public static OutputStream execTask(String command, String charset, String startRobotSign, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
@@ -136,17 +144,19 @@ public class CommandUtils {
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
+		    return output;
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			writeString("执行命令出现异常", output);
+			return output;
 		} finally {
 			try {
 				proc.destroy(); 
 				executorService.shutdown();	
 			} catch (Exception e2) {
 			}
+			logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		}
-		logger.info("thread name = {}, finish execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 	}
 	
 	private static class RobotThread implements Runnable {
@@ -209,12 +219,12 @@ public class CommandUtils {
 			    }
 	        } catch (IOException e) {
 	        	logger.error("read Process InputStream has error", e);
-	        } finally {
-	        	try {
-	        		inReader.close();
-				} catch (Exception e) {
-				}
-	        }
+            } finally {
+                try {
+                    inReader.close();
+                } catch (Exception e) {
+                }
+            }
 	    }
 	}
 	
@@ -240,13 +250,13 @@ public class CommandUtils {
 			    }
 	        } catch (IOException ioe) {
 	        	logger.error("WriteToStream has error", ioe);
-	        } finally {
-	        	try {
-	        		inReader.close();
-	        		input.close();
-				} catch (Exception e) {
-				}
-	        }
+            } finally {
+                try {
+                	input.close();
+                    inReader.close();
+                } catch (Exception e) {
+                }
+            }
 	    }
 	}
 	
@@ -254,7 +264,7 @@ public class CommandUtils {
         try {
         	DataOutputStream dos = new DataOutputStream(output); // 外部输出流,不要关闭
         	dos.writeUTF(message);
-        	dos.flush();
+            dos.flush();
         } catch (IOException e) {
         	logger.info("CommandUtils writeString method has error", e);
         }

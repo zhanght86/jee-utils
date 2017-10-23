@@ -18,7 +18,7 @@ import com.ckjava.utils.FileUtils;
 public class TestFileUtils {
 	
 	public static void main(String[] args) {
-		String path = "D:/git-workspace";
+		String path = "D:/git-workspace/db_backup";
 		String desDir = "D:/BaiduYunDownload/encode-files";
 		backupDir(path, desDir);
 	}
