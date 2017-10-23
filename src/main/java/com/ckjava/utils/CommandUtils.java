@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,18 +28,18 @@ public class CommandUtils {
 	 * @param charset 执行命令所在的系统编码
 	 * @param output 输出的结果
 	 */
-	public static StringBuffer execTask(String command, String charset, StringBuffer output) {
+	public static void execTask(String command, String[] envp, File dir, String charset, StringBuffer output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
 		Process proc = null;
 		ExecutorService executorService = Executors.newFixedThreadPool(2);
 		try {
-			proc = run.exec(command);// 启动另一个进程来执行命令
+			proc = run.exec(command, envp, dir);// 启动另一个进程来执行命令
 			// 读取错误输出
-			executorService.submit(new StreamGobbler(proc.getErrorStream(), charset, output));
+			Future<?> errorFuture = executorService.submit(new StreamGobbler(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new StreamGobbler(proc.getInputStream(), charset, output));
+			Future<?> normalFuture = executorService.submit(new StreamGobbler(proc.getInputStream(), charset, output));
 		    // 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
 		    	output.append("执行命令没有正常终止");
@@ -50,12 +51,11 @@ public class CommandUtils {
 		        
 		    }
 		    
-		    return output;
+		    errorFuture.get();
+		    normalFuture.get();
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			output.append("执行命令出现异常");
-			
-			return output;
 		} finally {
 			try {
 				proc.destroy();
@@ -75,18 +75,18 @@ public class CommandUtils {
 	 * @param output OutputStream 
 	 * 
 	 */
-	public static OutputStream execTask(String command, String charset, OutputStream output) {
+	public static void execTask(String command, String[] envp, File dir, String charset, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
 		Process proc = null;
 		ExecutorService executorService = Executors.newFixedThreadPool(2);
 		try {
-			proc = run.exec(command);// 启动另一个进程来执行命令
+			proc = run.exec(command, envp, dir);// 启动另一个进程来执行命令
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
+			Future<?> errorFuture = executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
+			Future<?> normalFuture = executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
 			// 接收socket输入
 			// executorService.submit(new RobotThread(socketInput));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
@@ -98,11 +98,12 @@ public class CommandUtils {
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
-		    return output;
+		    
+		    errorFuture.get();
+		    normalFuture.get();
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			writeString("执行命令出现异常", output);
-			return output;
 		} finally {
 			try {
 				proc.destroy(); 
@@ -121,20 +122,20 @@ public class CommandUtils {
 	 * @param startRobotSign
 	 * @param output OutputStream 
 	 */
-	public static OutputStream execTask(String command, String charset, String startRobotSign, OutputStream output) {
+	public static void execTask(String command, String[] envp, File dir, String charset, String startRobotSign, OutputStream output) {
 		logger.info("thread name = {}, start execute command = {}", new Object[]{Thread.currentThread().getName(), command});
 		Runtime run = Runtime.getRuntime();//返回与当前 Java 应用程序相关的运行时对象
 		
 		Process proc = null;
 		ExecutorService executorService = Executors.newFixedThreadPool(3);
 		try {
-			proc = run.exec(command);// 启动另一个进程来执行命令
+			proc = run.exec(command, envp, dir);// 启动另一个进程来执行命令
 			// 读取错误输出
-			executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
+			Future<?> errorFuture = executorService.submit(new WriteToStream(proc.getErrorStream(), charset, output));
 			// 读取正常输出
-			executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
+			Future<?> normalFuture = executorService.submit(new WriteToStream(proc.getInputStream(), charset, output));
 			// 启动机器人线程
-			executorService.submit(new RobotThread(startRobotSign));
+			Future<?> robotFuture =  executorService.submit(new RobotThread(startRobotSign));
 			// 检查命令是否执行失败 0 表示正常终止, 这种情况通常是 "java -jar ..." 之类的命令会一直在后台执行,无法终止,只有系统重启或者杀死该进程后才能正常
 		    if (proc.waitFor() != 0) {
 		    	writeString("执行命令没有正常终止", output);
@@ -144,11 +145,13 @@ public class CommandUtils {
 		        	logger.error("执行命令没有正常返回结果，执行失败");
 		        }
 		    }
-		    return output;
+		    
+		    errorFuture.get();
+		    normalFuture.get();
+		    robotFuture.get();
 		} catch (Exception e) {
 			logger.error("执行命令出现异常", e);
 			writeString("执行命令出现异常", output);
-			return output;
 		} finally {
 			try {
 				proc.destroy(); 
