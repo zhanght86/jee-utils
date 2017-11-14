@@ -287,9 +287,12 @@ public class HttpClientUtils {
 		
 		// 设置JSON请求体
 		try {
-			httpost.setEntity(new StringEntity(JSON.toJSONString(obj)));
-		} catch (UnsupportedEncodingException e) {
-			log.error("postForm has UnsupportedEncodingException", e);
+			StringEntity se = new StringEntity(JSON.toJSONString(obj), "UTF-8");
+		    se.setContentType("application/json");
+		    se.setContentEncoding("UTF-8");
+			httpost.setEntity(se);
+		} catch (Exception e) {
+			log.error("postJSONForm has Exception", e);
 		}
 
 		return httpost;

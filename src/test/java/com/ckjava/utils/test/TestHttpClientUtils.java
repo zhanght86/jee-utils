@@ -21,13 +21,15 @@ import org.apache.http.message.BasicNameValuePair;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ckjava.utils.CollectionUtils;
 import com.ckjava.utils.HttpClientUtils;
 import com.ckjava.utils.IOUtils;
 
 public class TestHttpClientUtils {
 	public static void main(String[] args) {
 		// testPostApi();
-		testPostApi2();
+		//testPostApi2();
+		//testPostApi3();
 	}
 
 	public static void testGetApi() {
@@ -69,6 +71,26 @@ public class TestHttpClientUtils {
 		String body = "{     \"CustomerID\":\"M01230808\" }";
 		Object obj = JSON.parse(body);
 		String resultStr = HttpClientUtils.post(url, headers, parameters, obj);
+		System.out.println(resultStr);
+	}
+	
+	public static void testPostApi3() {
+		String url = "http://10.32.74.44:9087/legends/api/job";
+
+		Map<String, Object> jobData = new HashMap<String, Object>();
+		jobData.put("id", "6");
+		jobData.put("name", "本地测试-1");
+		jobData.put("jobGroup", "UI自动化");
+		jobData.put("type", "REPEAT");
+		jobData.put("cron", "0 48 12 * * ?");
+		jobData.put("urls", "http://10.32.74.44/uiauto/job");
+		jobData.put("classPath", "com.ctrip.uiauto.webtool.job.RunCaseJob");
+		jobData.put("invokePolicy", "PRIORITY");
+		jobData.put("isClose", "no");
+		jobData.put("checkFinishTime", "00:00");
+		jobData.put("param", "10");
+		
+		String resultStr = HttpClientUtils.post(url, CollectionUtils.asHashMap(new String[]{ "offlineTicket", "username" }, new String[]{ "uiauto", "chen_k" }), null, jobData);
 		System.out.println(resultStr);
 	}
 
