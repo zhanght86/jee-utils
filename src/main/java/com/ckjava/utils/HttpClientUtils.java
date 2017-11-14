@@ -20,6 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -199,6 +200,44 @@ public class HttpClientUtils {
 			return invoke(httpClient, httpGet);
 		} catch (Exception e) {
 			log.error("http get has error", e);
+			return null;
+		} finally {
+			try {
+				httpClient.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+	
+	/**
+	 * delete 请求
+	 * @param url url
+	 * @param headers Map<String, String> 请求头
+	 * @param params Map<String, String> 请求参数
+	 * @return String
+	 */
+	public static String delete(String url, Map<String, String> headers, Map<String, String> params) {
+		CloseableHttpClient httpClient = initWeakSSLClient();
+		try {
+			// 将请求参数追加到url后面
+			url = appendRequestParameter(url, params);
+
+			log.info("create http delete:" + url);
+			HttpDelete httpDelete = new HttpDelete(url);
+			
+			// 添加请求头
+			if (headers != null && !headers.isEmpty()) {
+				for (Iterator<Entry<String, String>> it = headers.entrySet().iterator(); it.hasNext();) {
+					Entry<String, String> data = it.next();
+					String key = data.getKey();
+					String value = data.getValue();
+					httpDelete.addHeader(key, value);
+				}
+			}
+			
+			return invoke(httpClient, httpDelete);
+		} catch (Exception e) {
+			log.error("http delete has error", e);
 			return null;
 		} finally {
 			try {

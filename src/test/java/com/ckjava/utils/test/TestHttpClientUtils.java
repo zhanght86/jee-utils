@@ -30,6 +30,12 @@ public class TestHttpClientUtils {
 		// testPostApi();
 		//testPostApi2();
 		//testPostApi3();
+		testDeleteApi();
+	}
+	
+	public static void testDeleteApi() {
+		String datas = HttpClientUtils.delete("http://localhost:9087/legends/api/job/4", CollectionUtils.asHashMap(new String[]{ "offlineTicket", "username" }, new String[]{ "uiauto", "chen_k" }), null);
+		System.out.println(datas);
 	}
 
 	public static void testGetApi() {
